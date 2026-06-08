@@ -1,0 +1,19 @@
+# Copy this to .env and fill in values
+# DO NOT commit .env to git
+
+# Required: Redis connection string (Railway provides this automatically)
+REDIS_URL=redis://localhost:6379
+
+# Required: 64-char hex string for AES-256 encryption
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+ENCRYPTION_KEY=your_64_char_hex_key_here
+
+# Required: Salt for password hashing
+# Generate with: node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
+PASS_SALT=your_random_salt_here
+
+# Optional: Your frontend URL for CORS (e.g. https://justonce.up.railway.app)
+FRONTEND_URL=*
+
+# Optional: Port (Railway sets this automatically)
+PORT=3000
