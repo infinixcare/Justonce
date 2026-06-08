@@ -737,6 +737,1105 @@
 <nav>
   <div class="logo">
     <div class="logo-dot"></div>
+    JustOnce
+  </div>
+  <div class="nav-tag">secrets that self-destruct</div>
+</nav>
+
+<!-- MAIN CREATE PAGE -->
+<div id="createPage">
+  <section class="hero">
+    <div class="hero-eyebrow">Zero-knowledge · One-time</div>
+    <h1>Share credentials that <span>vanish</span></h1>
+    <p class="hero-sub">Paste a password, API key, or any secret. Generate a link. It self-destructs the moment it's read — or after your chosen time.</p>
+
+    <div class="card">
+      <div class="section-label">Your secret</div>
+      <textarea id="secretText" placeholder="Paste credentials, passwords, API keys, tokens…"></textarea>
+
+      <div class="options-row">
+        <!-- Expiry mode -->
+        <div class="toggle-group">
+          <input type="radio" name="expiry" id="onView" value="view" checked />
+          <label for="onView">👁 On view</label>
+          <input type="radio" name="expiry" id="onTime" value="time" />
+          <label for="onTime">⏱ After time</label>
+          <input type="radio" name="expiry" id="onBoth" value="both" />
+          <label for="onBoth">🔀 Both</label>
+        </div>
+
+        <!-- Time picker -->
+        <div class="time-select-wrap hidden" id="timeWrap">
+          <select id="timeLimit">
+            <option value="300">5 minutes</option>
+            <option value="900">15 minutes</option>
+            <option value="1800">30 minutes</option>
+            <option value="3600" selected>1 hour</option>
+            <option value="86400">24 hours</option>
+            <option value="604800">7 days</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Password protect toggle -->
+      <div class="encrypt-row">
+        <label class="switch">
+          <input type="checkbox" id="passToggle" />
+          <div class="switch-track"></div>
+        </label>
+        <div class="encrypt-label">
+          Password protect
+          <small>Recipient must enter a password to reveal</small>
+        </div>
+      </div>
+
+      <div class="password-row" id="passwordRow">
+        <div class="input-wrap" style="margin-top:0">
+          <input type="password" id="passInput" placeholder="Set a password for this secret…" />
+        </div>
+      </div>
+
+      <button class="btn-create" id="createBtn">Generate secret link -></button>
+
+      <!-- Result -->
+      <div class="result-box" id="resultBox">
+        <div class="result-label">✓ Secret link ready</div>
+        <div class="link-row">
+          <div class="link-display" id="linkDisplay"></div>
+          <button class="btn-copy" id="copyBtn">Copy</button>
+        </div>
+        <div class="result-meta">
+          <span id="metaExpiry">Deletes after: first view</span>
+          <span id="metaPass"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <div class="how-title">How it works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Paste the secret</strong>Credentials never leave your browser in plain text</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Set expiry rules</strong>Delete on view, after time, or whichever comes first</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Share the link</strong>Recipient opens it once — then it's gone forever</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Built with zero-knowledge encryption · <span>JustOnce</span> · Secrets never stored in plain text
+  </footer>
+</div>
+
+<!-- VIEW SECRET PAGE -->
+<div class="view-page" id="viewPage">
+  <div class="view-card" id="viewCard">
+    <div class="view-header">
+      <div class="view-header-left">🔐 Secret message</div>
+      <div class="view-badge"><div class="view-badge-dot"></div> Self-destructing</div>
+    </div>
+
+    <div class="view-warning" id="viewWarning">
+      ⚠️ This message will be permanently destroyed after you view it. Make sure you're ready to copy it before revealing.
+    </div>
+
+    <!-- Password gate -->
+    <div class="password-gate" id="passGate">
+      <div class="section-label" style="margin-bottom:10px">Enter password to unlock</div>
+      <div style="display:flex;gap:10px">
+        <div class="input-wrap" style="flex:1">
+          <input type="password" id="gateInput" placeholder="Password…" />
+        </div>
+        <button class="btn-copy" id="unlockBtn" style="padding:10px 20px;font-size:0.75rem">Unlock</button>
+      </div>
+      <div id="gateError" style="font-size:0.68rem;color:var(--danger);margin-top:8px;display:none">Incorrect password</div>
+    </div>
+
+    <!-- Timer bar -->
+    <div id="timerWrap" style="display:none">
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
+      <div class="timer-text" id="timerText"></div>
+    </div>
+
+    <!-- Secret -->
+    <div class="secret-reveal" id="secretReveal">
+      <div id="secretContent" class="secret-blur">••••••••••••••••••••••••••</div>
+      <div class="reveal-overlay" id="revealOverlay" onclick="revealSecret()">
+        <div class="reveal-icon">👁</div>
+        <div class="reveal-text">Click to reveal — it will self-destruct</div>
+      </div>
+    </div>
+
+    <!-- Destroyed state -->
+    <div class="destroyed-state" id="destroyedState">
+      <div class="destroyed-icon">💨</div>
+      <div class="destroyed-title">This secret has vanished.</div>
+      <div class="destroyed-sub">The message was permanently destroyed and cannot be recovered.<br/>That was the point.</div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px">
+      <a href="/" onclick="showCreate()" style="font-size:0.72rem;color:var(--muted);text-decoration:none;letter-spacing:0.05em">← Create your own secret link</a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://justonce-production.up.railway.app';
+
+// UI TOGGLES
+document.querySelectorAll('input[name="expiry"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const v = document.querySelector('input[name="expiry"]:checked').value;
+    document.getElementById('timeWrap').classList.toggle('hidden', v === 'view');
+  });
+});
+
+document.getElementById('passToggle').addEventListener('change', function() {
+  document.getElementById('passwordRow').classList.toggle('show', this.checked);
+});
+
+// CREATE SECRET
+document.getElementById('createBtn').addEventListener('click', async () => {
+  const text = document.getElementById('secretText').value.trim();
+  if (!text) { showToast('Please enter a secret first'); return; }
+
+  const mode = document.querySelector('input[name="expiry"]:checked').value;
+  const ttlSeconds = parseInt(document.getElementById('timeLimit').value);
+  const usePass = document.getElementById('passToggle').checked;
+  const password = document.getElementById('passInput').value;
+
+  if (usePass && !password) { showToast('Please enter a password to protect it'); return; }
+
+  const btn = document.getElementById('createBtn');
+  btn.textContent = 'Creating...';
+  btn.disabled = true;
+
+  try {
+    const body = { text, mode };
+    if (mode === 'time' || mode === 'both') body.ttlSeconds = ttlSeconds;
+    if (usePass) body.password = password;
+
+    const res = await fetch(`${API}/api/secrets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Failed to create secret'); return; }
+
+    const url = `${window.location.origin}${window.location.pathname}?s=${data.id}`;
+    document.getElementById('linkDisplay').textContent = url;
+
+    const metaExpiry = document.getElementById('metaExpiry');
+    if (mode === 'view') metaExpiry.textContent = 'Deletes after: first view';
+    else if (mode === 'time') metaExpiry.textContent = `Expires in: ${formatTime(ttlSeconds)}`;
+    else metaExpiry.textContent = `First view or ${formatTime(ttlSeconds)}, whichever first`;
+
+    document.getElementById('metaPass').textContent = usePass ? 'Password protected' : '';
+    document.getElementById('resultBox').classList.add('show');
+    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (err) {
+    showToast('Network error - please try again');
+  } finally {
+    btn.textContent = 'Generate secret link ->';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const url = document.getElementById('linkDisplay').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+});
+
+function formatTime(secs) {
+  if (secs < 60) return `${secs}s`;
+  if (secs < 3600) return `${secs / 60}min`;
+  if (secs < 86400) return `${secs / 3600}h`;
+  return `${secs / 86400}d`;
+}
+
+// VIEW SECRET
+let viewTimer = null;
+let secretMeta = null;
+let revealed = false;
+let currentId = null;
+
+async function checkForSecret() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('s');
+  if (!id) return;
+
+  currentId = id;
+
+  try {
+    const res = await fetch(`${API}/api/secrets/${id}/meta`);
+    if (!res.ok) {
+      showViewPage();
+      showDestroyed();
+      return;
+    }
+
+    secretMeta = await res.json();
+
+    showViewPage();
+
+    if (secretMeta.passwordProtected) {
+      document.getElementById('passGate').classList.add('show');
+      document.getElementById('secretReveal').style.display = 'none';
+    }
+
+    if (secretMeta.ttl) {
+      document.getElementById('timerWrap').style.display = 'block';
+      startTimer(secretMeta.ttl);
+    }
+
+  } catch (err) {
+    showViewPage();
+    showDestroyed();
+  }
+}
+
+function showViewPage() {
+  document.getElementById('createPage').style.display = 'none';
+  document.getElementById('viewPage').classList.add('active');
+}
+
+function startTimer(ttlSeconds) {
+  const bar = document.getElementById('timerBar');
+  const label = document.getElementById('timerText');
+  const endsAt = Date.now() + ttlSeconds * 1000;
+
+  function tick() {
+    const remaining = endsAt - Date.now();
+    if (remaining <= 0) {
+      showDestroyed();
+      return;
+    }
+    bar.style.width = ((remaining / (ttlSeconds * 1000)) * 100) + '%';
+    const s = Math.ceil(remaining / 1000);
+    label.textContent = s < 60 ? `Expires in ${s}s` : `Expires in ${Math.ceil(s / 60)}min`;
+    viewTimer = setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+document.getElementById('unlockBtn').addEventListener('click', async () => {
+  const password = document.getElementById('gateInput').value;
+  const errEl = document.getElementById('gateError');
+
+  try {
+    const res = await fetch(`${API}/api/secrets/${currentId}/reveal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await res.json();
+
+    if (res.status === 401) {
+      errEl.style.display = 'block';
+      return;
+    }
+
+    if (!res.ok) { showDestroyed(); return; }
+
+    errEl.style.display = 'none';
+    document.getElementById('passGate').classList.remove('show');
+    document.getElementById('secretReveal').style.display = '';
+    document.getElementById('secretContent').textContent = data.text;
+    document.getElementById('secretContent').classList.remove('secret-blur');
+    document.getElementById('revealOverlay').style.display = 'none';
+    revealed = true;
+    showDestroyWarning(data.mode);
+
+  } catch (err) {
+    showToast('Network error');
+  }
+});
+
+document.getElementById('gateInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('unlockBtn').click();
+});
+
+async function revealSecret() {
+  if (revealed) return;
+  revealed = true;
+
+  try {
+    const res = await fetch(`${API}/api/secrets/${currentId}/reveal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) { showDestroyed(); return; }
+
+    document.getElementById('revealOverlay').style.display = 'none';
+    document.getElementById('secretContent').classList.remove('secret-blur');
+    document.getElementById('secretContent').textContent = data.text;
+    showDestroyWarning(data.mode);
+
+  } catch (err) {
+    showToast('Network error');
+  }
+}
+
+function showDestroyWarning(mode) {
+  if (mode === 'view' || mode === 'both') {
+    document.getElementById('viewWarning').innerHTML = 'Secret has been revealed and <strong>permanently destroyed</strong>. Copy it now - it cannot be retrieved again.';
+    document.getElementById('viewWarning').style.background = 'rgba(245,158,11,0.1)';
+    document.getElementById('viewWarning').style.color = 'var(--warn)';
+    document.getElementById('viewWarning').style.borderColor = 'rgba(245,158,11,0.25)';
+  }
+}
+
+function showDestroyed() {
+  clearTimeout(viewTimer);
+  document.getElementById('secretReveal').style.display = 'none';
+  document.getElementById('viewWarning').style.display = 'none';
+  document.getElementById('timerWrap').style.display = 'none';
+  document.getElementById('passGate').style.display = 'none';
+  document.getElementById('destroyedState').classList.add('show');
+}
+
+function showCreate(e) {
+  if (e) e.preventDefault();
+  document.getElementById('viewPage').classList.remove('active');
+  document.getElementById('createPage').style.display = '';
+  history.pushState({}, '', window.location.pathname);
+}
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+checkForSecret();
+</script>
+</body>
+</html>
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,106,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,77,109,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .nav-tag {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 24px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    text-align: center;
+    max-width: 700px;
+    margin-bottom: 20px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), #ff6b9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+
+  /* MAIN CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 580px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.7;
+    padding: 16px;
+    resize: vertical;
+    min-height: 130px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  .options-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* TOGGLE PILLS */
+  .toggle-group {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .toggle-group label {
+    flex: 1;
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    padding: 10px 8px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .toggle-group input[type="radio"] { display: none; }
+
+  .toggle-group input[type="radio"]:checked + label {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  /* TIME SELECT */
+  .time-select-wrap {
+    flex: 1;
+    min-width: 140px;
+    position: relative;
+  }
+
+  .time-select-wrap select {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 10px 16px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .time-select-wrap select:focus { border-color: var(--accent); }
+
+  .time-select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.7rem;
+    pointer-events: none;
+  }
+
+  .time-select-wrap.hidden { display: none; }
+
+  /* ENCRYPT TOGGLE */
+  .encrypt-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .switch input { display: none; }
+
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .switch-track::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 14px; height: 14px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  .switch input:checked + .switch-track { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .switch input:checked + .switch-track::after { transform: translateX(16px); background: var(--accent); }
+
+  .encrypt-label { font-size: 0.75rem; color: var(--text); }
+  .encrypt-label small { display: block; color: var(--muted); font-size: 0.65rem; margin-top: 2px; }
+
+  /* PASSWORD ROW */
+  .password-row {
+    margin-top: 12px;
+    display: none;
+  }
+
+  .password-row.show { display: block; }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .input-wrap input::placeholder { color: var(--muted); }
+
+  /* BUTTON */
+  .btn-create {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124,106,255,0.4);
+  }
+
+  .btn-create:active { transform: translateY(0); }
+
+  .btn-create::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  }
+
+  /* RESULT */
+  .result-box {
+    display: none;
+    margin-top: 28px;
+    padding: 20px;
+    background: var(--success-soft);
+    border: 1px solid rgba(45,212,160,0.25);
+    border-radius: 12px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .result-box.show { display: block; }
+
+  .result-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--success); margin-bottom: 10px; }
+
+  .link-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .link-display {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(45,212,160,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--success);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default;
+    user-select: all;
+  }
+
+  .btn-copy {
+    background: rgba(45,212,160,0.15);
+    border: 1px solid rgba(45,212,160,0.3);
+    color: var(--success);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-copy:hover { background: rgba(45,212,160,0.25); }
+
+  .result-meta {
+    margin-top: 12px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .result-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* VIEW PAGE */
+  .view-page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    flex-direction: column;
+  }
+
+  .view-page.active { display: flex; }
+
+  .view-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 560px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .view-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--danger), transparent);
+    opacity: 0.7;
+  }
+
+  .view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .view-header-left { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
+  .view-badge {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid rgba(255,77,109,0.25);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .view-badge-dot {
+    width: 5px; height: 5px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  .view-warning {
+    background: var(--danger-soft);
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.75rem;
+    color: var(--danger);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .secret-reveal {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: var(--text);
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    word-break: break-all;
+  }
+
+  .secret-blur {
+    filter: blur(6px);
+    user-select: none;
+    pointer-events: none;
+    transition: filter 0.4s;
+  }
+
+  .reveal-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 12px;
+    background: rgba(10,10,15,0.5);
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s;
+  }
+
+  .reveal-overlay:hover { background: rgba(10,10,15,0.6); }
+
+  .reveal-icon { font-size: 1.5rem; }
+  .reveal-text { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  .timer-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--danger));
+    width: 100%;
+    transition: width 1s linear;
+    border-radius: 3px;
+  }
+
+  .timer-text {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: -14px;
+  }
+
+  .destroyed-state {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+
+  .destroyed-state.show { display: block; }
+
+  .destroyed-icon { font-size: 3rem; margin-bottom: 16px; }
+  .destroyed-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; margin-bottom: 10px; color: var(--muted); }
+  .destroyed-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+  /* PASSWORD GATE */
+  .password-gate {
+    display: none;
+    margin-bottom: 20px;
+  }
+
+  .password-gate.show { display: block; }
+
+  /* HOW IT WORKS */
+  .how-section {
+    position: relative;
+    z-index: 1;
+    padding: 60px 24px 100px;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .how-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 40px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+  }
+
+  .steps {
+    display: flex;
+    gap: 0;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 22px; left: 60px; right: 60px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .step-num {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-text { font-size: 0.72rem; color: var(--muted); line-height: 1.6; text-align: center; }
+  .step-text strong { display: block; color: var(--text); font-weight: 400; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
+
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  footer span { color: var(--accent); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 0.78rem;
+    color: var(--text);
+    z-index: 300;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    opacity: 0;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  @media (max-width: 500px) {
+    nav { padding: 16px 20px; }
+    .card, .view-card { padding: 28px 20px; }
+    .steps { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .steps::before { display: none; }
+    .step { flex-direction: row; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
     SingleReveal
   </div>
   <div class="nav-tag">secrets that self-destruct</div>
