@@ -17,7 +17,9 @@ redis.on('error', (err) => console.error('Redis error:', err));
 redis.connect().then(() => console.log('Redis connected'));
 
 // ─── MIDDLEWARE ───
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   methods: ['GET', 'POST'],
