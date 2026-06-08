@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Singlereveal — Share secrets that disappear</title>
+<title>Single Reveal — Share secrets that disappear</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,6 +23,46 @@
     --success-soft: rgba(45,212,160,0.12);
     --warn: #f59e0b;
   }
+
+  body.light {
+    --bg: #f4f4f8;
+    --surface: #ffffff;
+    --border: #e0e0f0;
+    --border-glow: #d0d0e8;
+    --text: #1a1a2e;
+    --muted: #8888aa;
+    --accent: #7c6aff;
+    --accent-soft: rgba(124,106,255,0.12);
+    --danger: #e63560;
+    --danger-soft: rgba(230,53,96,0.10);
+    --success: #12a07a;
+    --success-soft: rgba(18,160,122,0.10);
+    --warn: #d97706;
+  }
+
+  body.light::before {
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,106,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,77,109,0.05) 0%, transparent 60%);
+  }
+
+  .theme-toggle {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  body.light .theme-toggle { background: rgba(0,0,0,0.04); }
 
   html { scroll-behavior: smooth; }
 
@@ -739,7 +779,13 @@
     <div class="logo-dot"></div>
     SingleReveal
   </a>
-  <div class="nav-tag">secrets that self-destruct</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="nav-tag">secrets that self-destruct</div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <span id="themeIcon">☀️</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
 </nav>
 
 <!-- MAIN CREATE PAGE -->
@@ -831,7 +877,7 @@
   </section>
 
   <footer>
-    Built with zero-knowledge encryption · <span>Singlereveal</span> · Secrets never stored in plain text
+    Built with zero-knowledge encryption · <span>JustOnce</span> · Secrets never stored in plain text
   </footer>
 </div>
 
@@ -891,7 +937,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'https://www.singlereveal.com';
+const API = 'https://justonce-production.up.railway.app';
+
+// UI TOGGLES
 document.querySelectorAll('input[name="expiry"]').forEach(r => {
   r.addEventListener('change', () => {
     const v = document.querySelector('input[name="expiry"]:checked').value;
@@ -1125,6 +1173,24 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+// THEME TOGGLE
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isLight ? 'Dark' : 'Light';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('themeIcon').textContent = '🌙';
+    document.getElementById('themeLabel').textContent = 'Dark';
+  }
+})();
 
 // Init
 checkForSecret();
