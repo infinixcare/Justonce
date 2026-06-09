@@ -209,6 +209,7 @@ function toggleTheme() {
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 var saved = localStorage.getItem('theme');
 if (saved === 'light') {
   document.body.classList.add('light');
