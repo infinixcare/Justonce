@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Single Reveal — Share secrets that disappear</title>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9043162537151100" crossorigin="anonymous"></script>
-<meta name="google-adsense-account" content="ca-pub-9043162537151100">
+<title>Dashboard — SingleReveal</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,318 +17,227 @@
 }
 body.light {
   --bg: #f4f4f8; --surface: #ffffff; --border: #e0e0f0; --border-glow: #d0d0e8;
-  --text: #1a1a2e; --muted: #8888aa; --accent: #7c6aff;
-  --accent-soft: rgba(124,106,255,0.12); --danger: #e63560;
-  --danger-soft: rgba(230,53,96,0.10); --success: #12a07a;
-  --success-soft: rgba(18,160,122,0.10); --warn: #d97706;
-  --nav-bg: rgba(244,244,248,0.9);
+  --text: #1a1a2e; --muted: #8888aa; --nav-bg: rgba(244,244,248,0.9);
 }
-body.light::before {
-  background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,106,255,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,77,109,0.05) 0%, transparent 60%);
+body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-weight: 300; min-height: 100vh; }
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 16px 40px; background: var(--nav-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.logo-dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-user { font-size: 0.72rem; color: var(--muted); }
+.btn-sm { padding: 6px 14px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer; border: 1px solid var(--border); background: none; color: var(--muted); transition: all 0.2s; }
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { box-shadow: 0 4px 20px rgba(124,106,255,0.4); color: #fff; }
+.layout { display: flex; min-height: 100vh; padding-top: 64px; }
+.sidebar { width: 240px; border-right: 1px solid var(--border); padding: 24px 16px; flex-shrink: 0; position: fixed; top: 64px; bottom: 0; overflow-y: auto; background: var(--bg); }
+.sidebar-title { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; padding: 0 8px; }
+.ws-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 0.78rem; color: var(--muted); transition: all 0.2s; display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.ws-item:hover, .ws-item.active { background: var(--accent-soft); color: var(--accent); }
+.ws-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--accent); flex-shrink: 0; }
+.btn-new-ws { width: 100%; margin-top: 12px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+.btn-new-ws:hover { border-color: var(--accent); color: var(--accent); }
+.main { margin-left: 240px; flex: 1; padding: 32px; max-width: 900px; }
+.page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; margin-bottom: 6px; }
+.page-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 32px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; transition: background 0.3s, border-color 0.3s; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+.stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; color: var(--accent); }
+.stat-label { font-size: 0.68rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+.secret-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.secret-row:last-child { border-bottom: none; }
+.secret-title { font-size: 0.82rem; color: var(--text); margin-bottom: 2px; }
+.secret-meta { font-size: 0.68rem; color: var(--muted); }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.badge-view { background: var(--danger-soft); color: var(--danger); }
+.badge-time { background: rgba(124,106,255,0.12); color: var(--accent); }
+.badge-both { background: rgba(245,158,11,0.12); color: var(--warn); }
+.badge-destroyed { background: rgba(107,107,138,0.15); color: var(--muted); }
+.btn-reveal { padding: 5px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.68rem; cursor: pointer; border: 1px solid var(--border); background: none; color: var(--muted); transition: all 0.2s; }
+.btn-reveal:hover { border-color: var(--accent); color: var(--accent); }
+.member-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.member-row:last-child { border-bottom: none; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700; flex-shrink: 0; }
+.member-name { font-size: 0.8rem; color: var(--text); }
+.member-email { font-size: 0.68rem; color: var(--muted); }
+.role-badge { margin-left: auto; padding: 3px 8px; border-radius: 6px; font-size: 0.62rem; background: var(--accent-soft); color: var(--accent); }
+input[type="text"], input[type="email"], input[type="password"], textarea.form-textarea {
+  width: 100%; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.82rem; padding: 10px 14px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 12px;
 }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-weight: 300; min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
-body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,106,255,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,77,109,0.04) 0%, transparent 60%); pointer-events: none; z-index: 0; }
-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: var(--nav-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); transition: background 0.3s, border-color 0.3s; }
-.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03em; color: var(--text); display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); animation: pulse 2s infinite; flex-shrink: 0; }
-@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
-.nav-tag { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
-.theme-toggle { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
-.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
-body.light .theme-toggle { background: rgba(0,0,0,0.04); }
-.hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 24px 60px; position: relative; z-index: 1; }
-.hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
-.hero-eyebrow::before, .hero-eyebrow::after { content: ''; width: 32px; height: 1px; background: var(--accent); opacity: 0.5; }
-h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.05; letter-spacing: -0.04em; text-align: center; max-width: 700px; margin-bottom: 20px; }
-h1 span { background: linear-gradient(135deg, var(--accent), #ff6b9d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.hero-sub { color: var(--muted); font-size: 0.9rem; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 48px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 580px; position: relative; overflow: hidden; animation: fadeUp 0.6s ease both; transition: background 0.3s, border-color 0.3s; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.6; }
-.section-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-/* TABS */
-.tabs { display: flex; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-.tab { flex: 1; text-align: center; font-size: 0.75rem; padding: 10px; cursor: pointer; color: var(--muted); font-family: 'DM Mono', monospace; background: none; border: none; transition: all 0.2s; }
-.tab.active { background: var(--accent-soft); color: var(--accent); }
-/* DROP ZONE */
-.drop-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--muted); font-size: 0.8rem; }
-.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.drop-icon { font-size: 2rem; margin-bottom: 8px; }
-.file-info { display: none; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; font-size: 0.75rem; }
-.file-info span { color: var(--muted); }
-textarea { width: 100%; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; font-weight: 300; line-height: 1.7; padding: 16px; resize: vertical; min-height: 130px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-textarea::placeholder { color: var(--muted); }
-.options-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-.toggle-group { display: flex; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex: 1; min-width: 180px; }
-.toggle-group label { flex: 1; text-align: center; font-size: 0.72rem; letter-spacing: 0.05em; padding: 10px 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; user-select: none; }
-.toggle-group input[type="radio"] { display: none; }
-.toggle-group input[type="radio"]:checked + label { background: var(--accent-soft); color: var(--accent); font-weight: 400; }
-.time-select-wrap { flex: 1; min-width: 140px; position: relative; }
-.time-select-wrap select { width: 100%; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; padding: 10px 16px; outline: none; appearance: none; cursor: pointer; transition: border-color 0.2s; }
-.time-select-wrap.hidden { display: none; }
-.encrypt-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px; background: rgba(128,128,128,0.04); border: 1px solid var(--border); border-radius: 10px; transition: background 0.3s, border-color 0.3s; }
-.switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
-.switch input { display: none; }
-.switch-track { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: background 0.2s; }
-.switch-track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: var(--muted); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
-.switch input:checked + .switch-track { background: var(--accent-soft); border: 1px solid var(--accent); }
-.switch input:checked + .switch-track::after { transform: translateX(16px); background: var(--accent); }
-.encrypt-label { font-size: 0.75rem; color: var(--text); }
-.encrypt-label small { display: block; color: var(--muted); font-size: 0.65rem; margin-top: 2px; }
-.password-row { margin-top: 12px; display: none; }
-.password-row.show { display: block; }
-.input-wrap input { width: 100%; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.82rem; padding: 12px 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-.input-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.input-wrap input::placeholder { color: var(--muted); }
-.btn-create { width: 100%; margin-top: 24px; padding: 16px; background: var(--accent); color: #fff; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.05em; border: none; border-radius: 12px; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; }
-.btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,106,255,0.4); }
-.btn-create:active { transform: translateY(0); }
-.btn-create:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-.result-box { display: none; margin-top: 28px; padding: 20px; background: var(--success-soft); border: 1px solid rgba(45,212,160,0.25); border-radius: 12px; }
-.result-box.show { display: block; }
-.result-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--success); margin-bottom: 10px; }
-.link-row { display: flex; gap: 10px; align-items: center; }
-.link-display { flex: 1; background: rgba(0,0,0,0.15); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: var(--success); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: all; }
-.btn-copy { background: rgba(45,212,160,0.15); border: 1px solid rgba(45,212,160,0.3); color: var(--success); font-family: 'DM Mono', monospace; font-size: 0.7rem; padding: 10px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: background 0.2s; flex-shrink: 0; }
-.btn-copy:hover { background: rgba(45,212,160,0.25); }
-.result-meta { margin-top: 12px; font-size: 0.68rem; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
-.view-page { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; align-items: center; justify-content: center; padding: 24px; flex-direction: column; transition: background 0.3s; }
-.view-page.active { display: flex; }
-.view-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 560px; position: relative; overflow: hidden; animation: fadeUp 0.5s ease both; transition: background 0.3s, border-color 0.3s; }
-.view-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--danger), transparent); opacity: 0.7; }
-.view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.view-header-left { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
-.view-badge { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(255,77,109,0.25); display: flex; align-items: center; gap: 6px; }
-.view-badge-dot { width: 5px; height: 5px; background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite; }
-.view-warning { background: var(--danger-soft); border: 1px solid rgba(255,77,109,0.2); border-radius: 10px; padding: 14px 16px; font-size: 0.75rem; color: var(--danger); margin-bottom: 24px; line-height: 1.6; transition: all 0.3s; }
-.secret-reveal { background: rgba(128,128,128,0.1); border: 1px solid var(--border-glow); border-radius: 12px; padding: 24px; font-family: 'DM Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text); position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; word-break: break-all; transition: background 0.3s, border-color 0.3s; }
-.secret-blur { filter: blur(6px); user-select: none; pointer-events: none; transition: filter 0.4s; }
-.reveal-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border-radius: 12px; background: rgba(10,10,15,0.5); backdrop-filter: blur(2px); transition: opacity 0.3s; }
-body.light .reveal-overlay { background: rgba(244,244,248,0.6); }
-.reveal-overlay:hover { opacity: 0.85; }
-.reveal-icon { font-size: 1.5rem; }
-.reveal-text { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
-.file-reveal-info { display: none; background: rgba(124,106,255,0.08); border: 1px solid rgba(124,106,255,0.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; font-size: 0.78rem; }
-.file-reveal-info strong { color: var(--text); display: block; margin-bottom: 4px; }
-.file-reveal-info span { color: var(--muted); font-size: 0.7rem; }
-.timer-bar-wrap { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
-.timer-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--danger)); width: 100%; transition: width 1s linear; border-radius: 3px; }
-.timer-text { font-size: 0.7rem; color: var(--muted); text-align: center; margin-bottom: 20px; margin-top: -14px; }
-.destroyed-state { text-align: center; padding: 40px 20px; display: none; }
-.destroyed-state.show { display: block; }
-.destroyed-icon { font-size: 3rem; margin-bottom: 16px; }
-.destroyed-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; margin-bottom: 10px; color: var(--muted); }
-.destroyed-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
-.password-gate { display: none; margin-bottom: 20px; }
-.password-gate.show { display: block; }
-.how-section { position: relative; z-index: 1; padding: 60px 24px 100px; max-width: 700px; margin: 0 auto; text-align: center; }
-.how-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 40px; color: var(--muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.2em; }
-.steps { display: flex; gap: 0; position: relative; }
-.steps::before { content: ''; position: absolute; top: 22px; left: 60px; right: 60px; height: 1px; background: var(--border); }
-.step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 0 12px; }
-.step-num { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border-glow); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--accent); position: relative; z-index: 1; transition: background 0.3s, border-color 0.3s; }
-.step-text { font-size: 0.72rem; color: var(--muted); line-height: 1.6; text-align: center; }
-.step-text strong { display: block; color: var(--text); font-weight: 400; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
-footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; transition: border-color 0.3s; }
-footer span { color: var(--accent); }
-footer a { color: var(--muted); text-decoration: none; }
-footer a:hover { color: var(--accent); }
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 24px; font-size: 0.78rem; color: var(--text); z-index: 300; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; opacity: 0; white-space: nowrap; }
+input:focus, textarea.form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+textarea.form-textarea { min-height: 100px; resize: vertical; }
+.form-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-text { font-size: 0.8rem; line-height: 1.7; }
+.plan-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.plan-free { background: rgba(107,107,138,0.15); color: var(--muted); }
+.plan-pro { background: linear-gradient(135deg, rgba(124,106,255,0.2), rgba(255,107,157,0.2)); color: var(--accent); border: 1px solid rgba(124,106,255,0.3); }
+.reveal-result { background: rgba(128,128,128,0.08); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 0.82rem; line-height: 1.7; word-break: break-all; margin-top: 12px; display: none; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 24px; font-size: 0.78rem; color: var(--text); z-index: 600; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; opacity: 0; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-@media (max-width: 500px) {
-  nav { padding: 16px 20px; }
-  .nav-tag { display: none; }
-  .card, .view-card { padding: 28px 20px; }
-  .steps { flex-direction: column; align-items: flex-start; gap: 24px; }
-  .steps::before { display: none; }
-  .step { flex-direction: row; align-items: flex-start; }
+.select-input { width: 100%; background: rgba(128,128,128,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.82rem; padding: 10px 14px; outline: none; appearance: none; cursor: pointer; margin-bottom: 12px; }
+.toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.toggle-btn { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+.toggle-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="/" onclick="showCreate(event)" class="logo">
-    <div class="logo-dot"></div>
-    SingleReveal
-  </a>
-  <div style="display:flex;align-items:center;gap:16px">
-    <div class="nav-tag">secrets that self-destruct</div>
-    <button class="theme-toggle" id="themeToggle">
-      <span id="themeIcon">☀️</span>
-      <span id="themeLabel">Light</span>
-    </button>
+  <a href="/" class="logo"><div class="logo-dot"></div>SingleReveal</a>
+  <div class="nav-right">
+    <span class="nav-user" id="navUserName"></span>
+    <span class="plan-badge plan-free" id="navPlanBadge">Free</span>
+    <button class="btn-sm" onclick="logout()">Sign out</button>
   </div>
 </nav>
 
-<div id="createPage">
-  <section class="hero">
-    <div class="hero-eyebrow">Zero-knowledge · One-time</div>
-    <h1>Share credentials that <span>vanish</span></h1>
-    <p class="hero-sub">Paste a secret or upload a file. Generate a link. It self-destructs the moment it is read — or after your chosen time.</p>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-title">Workspaces</div>
+    <div id="workspaceList"></div>
+    <button class="btn-new-ws" onclick="showNewWorkspaceModal()">+ New workspace</button>
+    <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
+      <a href="/" style="font-size:0.72rem;color:var(--muted);text-decoration:none;padding:8px 12px;display:block;">← Share a secret</a>
+    </div>
+  </div>
 
-    <div class="card">
-      <div class="tabs">
-        <button class="tab active" id="tabText">Text secret</button>
-        <button class="tab" id="tabFile">File upload</button>
-      </div>
-
-      <div id="textSection">
-        <div class="section-label">Your secret</div>
-        <textarea id="secretText" placeholder="Paste credentials, passwords, API keys, tokens..."></textarea>
-      </div>
-
-      <div id="fileSection" style="display:none">
-        <div class="section-label">Upload a file</div>
-        <div class="drop-zone" id="dropZone">
-          <div id="dropText">
-            <div class="drop-icon">📁</div>
-            <div>Click or drag a file here</div>
-            <div style="font-size:0.65rem;margin-top:6px">PDF, images, text files — max 10MB</div>
-          </div>
-        </div>
-        <div class="file-info" id="fileInfo">
-          <span id="fileName">No file</span>
-          <span id="fileSize"></span>
-        </div>
-        <input type="file" id="fileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip,.doc,.docx" />
-      </div>
-
-      <div class="options-row">
-        <div class="toggle-group">
-          <input type="radio" name="expiry" id="onView" value="view" checked />
-          <label for="onView">On view</label>
-          <input type="radio" name="expiry" id="onTime" value="time" />
-          <label for="onTime">After time</label>
-          <input type="radio" name="expiry" id="onBoth" value="both" />
-          <label for="onBoth">Both</label>
-        </div>
-        <div class="time-select-wrap hidden" id="timeWrap">
-          <select id="timeLimit">
-            <option value="300">5 minutes</option>
-            <option value="900">15 minutes</option>
-            <option value="1800">30 minutes</option>
-            <option value="3600" selected>1 hour</option>
-            <option value="86400">24 hours</option>
-            <option value="604800">7 days</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="encrypt-row">
-        <label class="switch">
-          <input type="checkbox" id="passToggle" />
-          <div class="switch-track"></div>
-        </label>
-        <div class="encrypt-label">
-          Password protect
-          <small>Recipient must enter a password to reveal</small>
-        </div>
-      </div>
-
-      <div class="password-row" id="passwordRow">
-        <div class="input-wrap" style="margin-top:0">
-          <input type="password" id="passInput" placeholder="Set a password for this secret..." />
-        </div>
-      </div>
-
-      <button class="btn-create" id="createBtn">Generate secret link</button>
-
-      <div class="result-box" id="resultBox">
-        <div class="result-label">Secret link ready</div>
-        <div class="link-row">
-          <div class="link-display" id="linkDisplay"></div>
-          <button class="btn-copy" id="copyBtn">Copy</button>
-        </div>
-        <div class="result-meta">
-          <span id="metaExpiry">Deletes after: first view</span>
-          <span id="metaPass"></span>
-        </div>
+  <div class="main">
+    <div id="noWorkspaceState" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <div class="page-title" style="margin-bottom:8px">No workspace yet</div>
+        <div class="empty-text">Create a workspace to share secrets with your team securely.</div>
+        <button class="btn-sm btn-primary" style="margin-top:20px" onclick="showNewWorkspaceModal()">Create your first workspace</button>
       </div>
     </div>
-  </section>
 
-  <section class="how-section">
-    <div class="how-title">How it works</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text"><strong>Paste or upload</strong>Text or files, encrypted before storage</div>
+    <div id="workspaceContent" style="display:none">
+      <div class="page-title" id="wsTitle"></div>
+      <div class="page-sub" id="wsSubtitle"></div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="statSecrets">0</div><div class="stat-label">Active Secrets</div></div>
+        <div class="stat-card"><div class="stat-num" id="statMembers">0</div><div class="stat-label">Members</div></div>
+        <div class="stat-card"><div class="stat-num" id="statDestroyed">-</div><div class="stat-label">Plan</div></div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text"><strong>Set expiry rules</strong>Delete on view, after time, or both</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Team Secrets</div>
+          <button class="btn-sm btn-primary" onclick="showNewSecretModal()">+ New secret</button>
+        </div>
+        <div id="secretsList">
+          <div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-text">No secrets yet. Create one to share with your team.</div></div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text"><strong>Share the link</strong>Recipient opens it once — then it is gone forever</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Members</div>
+          <button class="btn-sm" onclick="showInviteModal()">+ Invite member</button>
+        </div>
+        <div id="membersList"></div>
       </div>
     </div>
-  </section>
-
-  <footer>
-    Built with zero-knowledge encryption · <span>Single Reveal</span> · <a href="/privacy.html">Privacy Policy</a>
-  </footer>
+  </div>
 </div>
 
-<div class="view-page" id="viewPage">
-  <div class="view-card">
-    <div class="view-header">
-      <div class="view-header-left">Secret message</div>
-      <div class="view-badge"><div class="view-badge-dot"></div> Self-destructing</div>
+<!-- New Workspace Modal -->
+<div class="modal-overlay" id="newWsModal">
+  <div class="modal">
+    <div class="modal-title">Create workspace</div>
+    <label class="form-label">Workspace name</label>
+    <input type="text" id="wsNameInput" placeholder="e.g. Acme Corp, Engineering Team..." />
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="hideModal('newWsModal')">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="createWorkspace()">Create</button>
     </div>
+  </div>
+</div>
 
-    <div class="view-warning" id="viewWarning">
-      This message will be permanently destroyed after you view it. Make sure you are ready before revealing.
+<!-- New Secret Modal -->
+<div class="modal-overlay" id="newSecretModal">
+  <div class="modal">
+    <div class="modal-title">New team secret</div>
+    <label class="form-label">Title</label>
+    <input type="text" id="secretTitleInput" placeholder="e.g. Production API Key" />
+    <label class="form-label">Secret content</label>
+    <textarea class="form-textarea" id="secretContentInput" placeholder="Paste your secret here..."></textarea>
+    <label class="form-label">Expiry mode</label>
+    <div class="toggle-row">
+      <button class="toggle-btn active" id="modeView" onclick="setMode('view')">On view</button>
+      <button class="toggle-btn" id="modeTime" onclick="setMode('time')">After time</button>
+      <button class="toggle-btn" id="modeBoth" onclick="setMode('both')">Both</button>
     </div>
-
-    <div class="file-reveal-info" id="fileRevealInfo">
-      <strong id="fileRevealName"></strong>
-      <span id="fileRevealSize"></span>
+    <div id="ttlRow" style="display:none">
+      <label class="form-label">Time limit</label>
+      <select class="select-input" id="secretTtl">
+        <option value="300">5 minutes</option>
+        <option value="900">15 minutes</option>
+        <option value="3600" selected>1 hour</option>
+        <option value="86400">24 hours</option>
+        <option value="604800">7 days</option>
+      </select>
     </div>
-
-    <div class="password-gate" id="passGate">
-      <div class="section-label" style="margin-bottom:10px">Enter password to unlock</div>
-      <div style="display:flex;gap:10px">
-        <div class="input-wrap" style="flex:1">
-          <input type="password" id="gateInput" placeholder="Password..." />
-        </div>
-        <button class="btn-copy" id="unlockBtn" style="padding:10px 20px;font-size:0.75rem">Unlock</button>
-      </div>
-      <div id="gateError" style="font-size:0.68rem;color:var(--danger);margin-top:8px;display:none">Incorrect password</div>
+    <label class="form-label">Who can view? (leave empty for all members)</label>
+    <input type="text" id="secretAllowedInput" placeholder="Enter member emails, comma separated..." />
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="hideModal('newSecretModal')">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="createTeamSecret()">Create secret</button>
     </div>
+  </div>
+</div>
 
-    <div id="timerWrap" style="display:none">
-      <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
-      <div class="timer-text" id="timerText"></div>
+<!-- Invite Modal -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal">
+    <div class="modal-title">Invite member</div>
+    <label class="form-label">Email address</label>
+    <input type="email" id="inviteEmailInput" placeholder="colleague@company.com" />
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:-4px;margin-bottom:12px">They must already have a SingleReveal account.</div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="hideModal('inviteModal')">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="inviteMember()">Send invite</button>
     </div>
+  </div>
+</div>
 
-    <div class="secret-reveal" id="secretReveal">
-      <div id="secretContent" class="secret-blur">.........................</div>
-      <div class="reveal-overlay" id="revealOverlay" onclick="revealSecret()">
-        <div class="reveal-icon">👁</div>
-        <div class="reveal-text">Click to reveal — it will self-destruct</div>
-      </div>
+<!-- Reveal Modal -->
+<div class="modal-overlay" id="revealModal">
+  <div class="modal">
+    <div class="modal-title" id="revealModalTitle">Reveal secret</div>
+    <div style="font-size:0.75rem;color:var(--danger);margin-bottom:16px">This secret will be permanently destroyed after you view it.</div>
+    <div class="reveal-result" id="revealResult"></div>
+    <div id="revealActions">
+      <button class="btn-sm" onclick="hideModal('revealModal')" style="margin-right:8px">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="confirmReveal()">Reveal and destroy</button>
     </div>
-    <button id="copySecretBtn" style="display:none;width:100%;margin-bottom:16px;padding:12px;background:rgba(124,106,255,0.15);border:1px solid rgba(124,106,255,0.3);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.8rem;border-radius:10px;cursor:pointer;">Copy secret to clipboard</button>
-
-
-    <div class="destroyed-state" id="destroyedState">
-      <div class="destroyed-icon">💨</div>
-      <div class="destroyed-title">This secret has vanished.</div>
-      <div class="destroyed-sub">Permanently destroyed and cannot be recovered.<br/>That was the point.</div>
-    </div>
-
-    <div style="text-align:center;margin-top:16px">
-      <a href="/" onclick="showCreate(event)" style="font-size:0.72rem;color:var(--muted);text-decoration:none">Create your own secret link</a>
+    <div id="revealCopyRow" style="display:none;margin-top:12px">
+      <button class="btn-sm btn-primary" onclick="copyRevealed()" style="width:100%">Copy to clipboard</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="/app.js"></script>
+
+<script src="/dashboard.js"></script>
 </body>
 </html>
