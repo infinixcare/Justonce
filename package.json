@@ -1,7 +1,8 @@
+cat > /mnt/user-data/outputs/package.json << 'EOF'
 {
   "name": "justonce-backend",
   "version": "1.0.0",
-  "description": "JustOnce self-destructing secrets backend",
+  "description": "SingleReveal self-destructing secrets backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,6 +13,7 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
+    "multer": "^1.4.5-lts.1",
     "redis": "^4.6.12"
   },
   "devDependencies": {
@@ -21,3 +23,4 @@
     "node": ">=18.0.0"
   }
 }
+EOF
