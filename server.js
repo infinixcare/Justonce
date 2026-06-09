@@ -3,11 +3,13 @@ const { createClient } = require('redis');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
-const helmet = require('helmet');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Trust Railway's proxy for rate limiting
+app.set('trust proxy', 1);
 
 // REDIS
 const redis = createClient({
@@ -25,29 +27,17 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
+// Serve static files FIRST (ads.txt, app.js, etc.)
+app.use(express.static('public'));
+
 // Serve index.html with security headers
 app.get('/', (req, res) => {
-
- //res.setHeader('Content-Security-Policy',
-   // "default-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://adservice.google.com; " +
-   // "script-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://adservice.google.com 'unsafe-inline'; " +
-  //  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
- //   "font-src https://fonts.gstatic.com; " +
- //   "connect-src 'self' https://www.singlereveal.com https://singlereveal.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; " +
-//    "img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; " +
- //   "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com;"
-//  );
-
-
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// Serve other static files normally
-app.use(express.static('public'));
 
 // Rate limiting
 const createLimiter = rateLimit({
@@ -96,7 +86,7 @@ function decrypt(encrypted) {
 }
 
 function hashPassword(pass) {
-  return crypto.createHash('sha256').update(pass + process.env.PASS_SALT || 'justonce-salt').digest('hex');
+  return crypto.createHash('sha256').update(pass + (process.env.PASS_SALT || 'justonce-salt')).digest('hex');
 }
 
 function genId() {
@@ -133,12 +123,12 @@ app.post('/api/secrets', createLimiter, async (req, res) => {
     };
 
     if (mode === 'time' || mode === 'both') {
-      await redis.set(`secret:${id}`, JSON.stringify(payload), { EX: ttlSeconds });
+      await redis.set('secret:' + id, JSON.stringify(payload), { EX: ttlSeconds });
     } else {
-      await redis.set(`secret:${id}`, JSON.stringify(payload), { EX: 604800 });
+      await redis.set('secret:' + id, JSON.stringify(payload), { EX: 604800 });
     }
 
-    console.log(`[CREATE] id=${id} mode=${mode}`);
+    console.log('[CREATE] id=' + id + ' mode=' + mode);
     return res.status(201).json({ id });
 
   } catch (err) {
@@ -154,11 +144,11 @@ app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
       return res.status(404).json({ error: 'Not found.' });
     }
 
-    const raw = await redis.get(`secret:${id}`);
+    const raw = await redis.get('secret:' + id);
     if (!raw) return res.status(404).json({ error: 'Secret not found or already destroyed.' });
 
     const payload = JSON.parse(raw);
-    const ttl = await redis.ttl(`secret:${id}`);
+    const ttl = await redis.ttl('secret:' + id);
 
     return res.json({
       exists: true,
@@ -182,7 +172,7 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
       return res.status(404).json({ error: 'Not found.' });
     }
 
-    const raw = await redis.get(`secret:${id}`);
+    const raw = await redis.get('secret:' + id);
     if (!raw) return res.status(404).json({ error: 'Secret not found or already destroyed.' });
 
     const payload = JSON.parse(raw);
@@ -197,10 +187,10 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
     const text = decrypt(payload.encrypted);
 
     if (payload.mode === 'view' || payload.mode === 'both') {
-      await redis.del(`secret:${id}`);
+      await redis.del('secret:' + id);
     }
 
-    console.log(`[REVEAL] id=${id} mode=${payload.mode}`);
+    console.log('[REVEAL] id=' + id + ' mode=' + payload.mode);
     return res.json({ text, mode: payload.mode });
 
   } catch (err) {
@@ -211,4 +201,4 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-app.listen(PORT, () => console.log(`JustOnce running on port ${PORT}`));
+app.listen(PORT, () => console.log('JustOnce running on port ' + PORT));
