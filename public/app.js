@@ -356,4 +356,3 @@ if (saved === 'light') {
 }
 
 checkForSecret();
-EOF
