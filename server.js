@@ -4,11 +4,13 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const helmet = require('helmet');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── REDIS ───
+// REDIS
 const redis = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
@@ -16,20 +18,45 @@ const redis = createClient({
 redis.on('error', (err) => console.error('Redis error:', err));
 redis.connect().then(() => console.log('Redis connected'));
 
-// ─── MIDDLEWARE ───
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+// CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   methods: ['GET', 'POST'],
 }));
+
 app.use(express.json({ limit: '10kb' }));
+
+// Serve index.html with nonce injected
+app.get('/', (req, res) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+
+  // Set CSP header with nonce
+  res.setHeader('Content-Security-Policy',
+    `default-src 'self'; ` +
+    `script-src 'nonce-${nonce}'; ` +
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
+    `font-src https://fonts.gstatic.com; ` +
+    `connect-src 'self' https://www.singlereveal.com https://singlereveal.com; ` +
+    `img-src 'self' data:;`
+  );
+
+  // Also use helmet for other headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+
+  let html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  html = html.replace('<script>', `<script nonce="${nonce}">`);
+  res.send(html);
+});
+
+// Serve other static files normally
 app.use(express.static('public'));
 
 // Rate limiting
 const createLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 20,
   message: { error: 'Too many secrets created. Try again in 15 minutes.' }
 });
@@ -40,7 +67,7 @@ const viewLimiter = rateLimit({
   message: { error: 'Too many requests. Slow down.' }
 });
 
-// ─── ENCRYPTION ───
+// ENCRYPTION
 const ALGO = 'aes-256-gcm';
 const ENCRYPTION_KEY = Buffer.from(
   process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex'),
@@ -81,9 +108,8 @@ function genId() {
   return crypto.randomBytes(16).toString('base64url');
 }
 
-// ─── ROUTES ───
+// ROUTES
 
-// POST /api/secrets — create a new secret
 app.post('/api/secrets', createLimiter, async (req, res) => {
   try {
     const { text, mode, ttlSeconds, password } = req.body;
@@ -111,11 +137,9 @@ app.post('/api/secrets', createLimiter, async (req, res) => {
       createdAt: Date.now(),
     };
 
-    // Store in Redis
     if (mode === 'time' || mode === 'both') {
       await redis.set(`secret:${id}`, JSON.stringify(payload), { EX: ttlSeconds });
     } else {
-      // view-only: keep for 7 days max as a safety net
       await redis.set(`secret:${id}`, JSON.stringify(payload), { EX: 604800 });
     }
 
@@ -128,7 +152,6 @@ app.post('/api/secrets', createLimiter, async (req, res) => {
   }
 });
 
-// GET /api/secrets/:id/meta — check if secret exists + if password protected (no content)
 app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
   try {
     const { id } = req.params;
@@ -155,7 +178,6 @@ app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
   }
 });
 
-// POST /api/secrets/:id/reveal — reveal and destroy the secret
 app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,7 +192,6 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
 
     const payload = JSON.parse(raw);
 
-    // Password check
     if (payload.passwordHash) {
       if (!password) return res.status(401).json({ error: 'Password required.', passwordRequired: true });
       if (hashPassword(password) !== payload.passwordHash) {
@@ -178,10 +199,8 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
       }
     }
 
-    // Decrypt
     const text = decrypt(payload.encrypted);
 
-    // DESTROY — delete immediately after reading (for view/both modes)
     if (payload.mode === 'view' || payload.mode === 'both') {
       await redis.del(`secret:${id}`);
     }
@@ -195,7 +214,6 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
   }
 });
 
-// Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => console.log(`JustOnce running on port ${PORT}`));
