@@ -308,7 +308,25 @@ async function revealSecret() {
 }
 
 function showDestroyWarning(mode) {
+  var copyBtn = document.getElementById('copySecretBtn');
+  if (copyBtn) {
+    copyBtn.style.display = 'block';
+    copyBtn.onclick = function() {
+      var text = document.getElementById('secretContent').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = 'Copy secret to clipboard'; }, 2000);
+      });
+    };
+  }
   if (mode === 'view' || mode === 'both') {
+    document.getElementById('viewWarning').innerHTML = 'Secret has been revealed and <strong>permanently destroyed</strong>. Copy it now - it cannot be retrieved again.';
+    document.getElementById('viewWarning').style.background = 'rgba(245,158,11,0.1)';
+    document.getElementById('viewWarning').style.color = 'var(--warn)';
+    document.getElementById('viewWarning').style.borderColor = 'rgba(245,158,11,0.25)';
+  }
+}
+
     document.getElementById('viewWarning').innerHTML = 'Secret has been revealed and <strong>permanently destroyed</strong>. Copy it now - it cannot be retrieved again.';
     document.getElementById('viewWarning').style.background = 'rgba(245,158,11,0.1)';
     document.getElementById('viewWarning').style.color = 'var(--warn)';
