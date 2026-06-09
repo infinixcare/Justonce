@@ -4,7 +4,6 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const helmet = require('helmet');
-const fs = require('fs');
 const path = require('path');
 
 const app = express();
@@ -26,29 +25,21 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-// Serve index.html with nonce injected
+// Serve index.html with security headers
 app.get('/', (req, res) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-
-  // Set CSP header with nonce
   res.setHeader('Content-Security-Policy',
-    `default-src 'self'; ` +
-    `script-src 'nonce-${nonce}'; ` +
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ` +
-    `font-src https://fonts.gstatic.com; ` +
-    `connect-src 'self' https://www.singlereveal.com https://singlereveal.com; ` +
-    `img-src 'self' data:;`
+    "default-src 'self'; " +
+    "script-src 'self'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src https://fonts.gstatic.com; " +
+    "connect-src 'self' https://www.singlereveal.com https://singlereveal.com; " +
+    "img-src 'self' data:;"
   );
-
-  // Also use helmet for other headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-
-  let html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
-  html = html.replace('<script>', `<script nonce="${nonce}">`);
-  res.send(html);
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Serve other static files normally
