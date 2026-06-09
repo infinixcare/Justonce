@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/app.js << 'EOF'
 var API = 'https://www.singlereveal.com';
 
 // UI TOGGLES
