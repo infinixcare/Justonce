@@ -29,12 +29,13 @@ app.use(express.json({ limit: '10kb' }));
 app.get('/', (req, res) => {
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self'; " +
+    "script-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src https://fonts.gstatic.com; " +
-    "connect-src 'self' https://www.singlereveal.com https://singlereveal.com; " +
+    "connect-src 'self' https://www.singlereveal.com https://singlereveal.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; " +
     "img-src 'self' data:;"
   );
+
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
