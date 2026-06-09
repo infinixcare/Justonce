@@ -27,7 +27,8 @@ app.use(express.json({ limit: '10kb' }));
 
 // Serve index.html with security headers
 app.get('/', (req, res) => {
-  res.setHeader('Content-Security-Policy',
+
+ //res.setHeader('Content-Security-Policy',
     "default-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://adservice.google.com; " +
     "script-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://adservice.google.com 'unsafe-inline'; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
