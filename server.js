@@ -4,11 +4,12 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust Railway's proxy for rate limiting
+// Trust Railway's proxy
 app.set('trust proxy', 1);
 
 // REDIS
@@ -27,7 +28,28 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-// Serve static files FIRST (ads.txt, app.js, etc.)
+// Multer - store files in memory, max 10MB
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'text/plain',
+      'application/zip',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not allowed'));
+    }
+  }
+});
+
+// Serve static files first
 app.use(express.static('public'));
 
 // Serve index.html with security headers
@@ -59,10 +81,10 @@ const ENCRYPTION_KEY = Buffer.from(
   'hex'
 );
 
-function encrypt(text) {
+function encryptBuffer(buffer) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(ALGO, ENCRYPTION_KEY, iv);
-  const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+  const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
   const tag = cipher.getAuthTag();
   return {
     iv: iv.toString('hex'),
@@ -71,18 +93,25 @@ function encrypt(text) {
   };
 }
 
-function decrypt(encrypted) {
+function decryptBuffer(encrypted) {
   const decipher = crypto.createDecipheriv(
     ALGO,
     ENCRYPTION_KEY,
     Buffer.from(encrypted.iv, 'hex')
   );
   decipher.setAuthTag(Buffer.from(encrypted.tag, 'hex'));
-  const decrypted = Buffer.concat([
+  return Buffer.concat([
     decipher.update(Buffer.from(encrypted.content, 'hex')),
     decipher.final()
   ]);
-  return decrypted.toString('utf8');
+}
+
+function encrypt(text) {
+  return encryptBuffer(Buffer.from(text, 'utf8'));
+}
+
+function decrypt(encrypted) {
+  return decryptBuffer(encrypted).toString('utf8');
 }
 
 function hashPassword(pass) {
@@ -95,6 +124,7 @@ function genId() {
 
 // ROUTES
 
+// POST /api/secrets - create text secret
 app.post('/api/secrets', createLimiter, async (req, res) => {
   try {
     const { text, mode, ttlSeconds, password } = req.body;
@@ -116,19 +146,17 @@ app.post('/api/secrets', createLimiter, async (req, res) => {
     const encrypted = encrypt(text);
 
     const payload = {
+      type: 'text',
       encrypted,
       mode,
       passwordHash: password ? hashPassword(password) : null,
       createdAt: Date.now(),
     };
 
-    if (mode === 'time' || mode === 'both') {
-      await redis.set('secret:' + id, JSON.stringify(payload), { EX: ttlSeconds });
-    } else {
-      await redis.set('secret:' + id, JSON.stringify(payload), { EX: 604800 });
-    }
+    const ttl = (mode === 'time' || mode === 'both') ? ttlSeconds : 604800;
+    await redis.set('secret:' + id, JSON.stringify(payload), { EX: ttl });
 
-    console.log('[CREATE] id=' + id + ' mode=' + mode);
+    console.log('[CREATE TEXT] id=' + id + ' mode=' + mode);
     return res.status(201).json({ id });
 
   } catch (err) {
@@ -137,6 +165,49 @@ app.post('/api/secrets', createLimiter, async (req, res) => {
   }
 });
 
+// POST /api/files - upload a file secret
+app.post('/api/files', createLimiter, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    const { mode, ttlSeconds, password } = req.body;
+
+    if (!['view', 'time', 'both'].includes(mode)) {
+      return res.status(400).json({ error: 'Invalid mode.' });
+    }
+    if ((mode === 'time' || mode === 'both') && (!ttlSeconds || ttlSeconds < 60 || ttlSeconds > 604800)) {
+      return res.status(400).json({ error: 'TTL must be between 60s and 7 days.' });
+    }
+
+    const id = genId();
+    const encrypted = encryptBuffer(req.file.buffer);
+
+    const payload = {
+      type: 'file',
+      encrypted,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      mode,
+      passwordHash: password ? hashPassword(password) : null,
+      createdAt: Date.now(),
+    };
+
+    const ttl = (mode === 'time' || mode === 'both') ? parseInt(ttlSeconds) : 604800;
+    await redis.set('secret:' + id, JSON.stringify(payload), { EX: ttl });
+
+    console.log('[CREATE FILE] id=' + id + ' file=' + req.file.originalname);
+    return res.status(201).json({ id });
+
+  } catch (err) {
+    console.error('[FILE ERROR]', err.message);
+    return res.status(500).json({ error: 'Failed to upload file.' });
+  }
+});
+
+// GET /api/secrets/:id/meta
 app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
   try {
     const { id } = req.params;
@@ -152,6 +223,10 @@ app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
 
     return res.json({
       exists: true,
+      type: payload.type || 'text',
+      filename: payload.filename || null,
+      size: payload.size || null,
+      mimetype: payload.mimetype || null,
       passwordProtected: !!payload.passwordHash,
       mode: payload.mode,
       ttl: ttl > 0 ? ttl : null,
@@ -163,6 +238,7 @@ app.get('/api/secrets/:id/meta', viewLimiter, async (req, res) => {
   }
 });
 
+// POST /api/secrets/:id/reveal
 app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
   try {
     const { id } = req.params;
@@ -184,14 +260,22 @@ app.post('/api/secrets/:id/reveal', viewLimiter, async (req, res) => {
       }
     }
 
-    const text = decrypt(payload.encrypted);
-
     if (payload.mode === 'view' || payload.mode === 'both') {
       await redis.del('secret:' + id);
     }
 
-    console.log('[REVEAL] id=' + id + ' mode=' + payload.mode);
-    return res.json({ text, mode: payload.mode });
+    if (payload.type === 'file') {
+      const fileBuffer = decryptBuffer(payload.encrypted);
+      console.log('[REVEAL FILE] id=' + id);
+      res.setHeader('Content-Disposition', 'attachment; filename="' + payload.filename + '"');
+      res.setHeader('Content-Type', payload.mimetype);
+      res.setHeader('X-Secret-Mode', payload.mode);
+      return res.send(fileBuffer);
+    } else {
+      const text = decrypt(payload.encrypted);
+      console.log('[REVEAL TEXT] id=' + id);
+      return res.json({ text, mode: payload.mode });
+    }
 
   } catch (err) {
     console.error('[REVEAL ERROR]', err.message);
