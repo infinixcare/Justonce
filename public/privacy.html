@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — SingleReveal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --accent: #7c6aff;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    min-height: 100vh;
+    line-height: 1.8;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background: rgba(10,10,15,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 120px 24px 80px;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.5rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .updated {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 48px;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  p { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; }
+  ul { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; padding-left: 20px; }
+  ul li { margin-bottom: 8px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer {
+    text-align: center;
+    padding: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  footer span { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-dot"></div>
+    SingleReveal
+  </a>
+</nav>
+
+<div class="container">
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: June 9, 2026</div>
+
+  <p>SingleReveal ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our service at <a href="https://www.singlereveal.com">www.singlereveal.com</a>.</p>
+
+  <h2>1. Information We Collect</h2>
+  <p>SingleReveal is designed with privacy as a core principle. We collect minimal information:</p>
+  <ul>
+    <li><strong>Secrets you submit:</strong> Encrypted and stored temporarily in our database. Secrets are automatically deleted after they are viewed or after their expiry time.</li>
+    <li><strong>IP addresses:</strong> Collected temporarily for rate limiting purposes to prevent abuse. Not stored permanently.</li>
+    <li><strong>Usage data:</strong> Basic server logs including request times and error messages. No personally identifiable information is stored in logs.</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <p>We use the information we collect solely to:</p>
+  <ul>
+    <li>Provide the secret sharing service</li>
+    <li>Prevent abuse through rate limiting</li>
+    <li>Monitor and improve service reliability</li>
+    <li>Comply with legal obligations</li>
+  </ul>
+
+  <h2>3. How We Protect Your Data</h2>
+  <p>All secrets are encrypted using AES-256-GCM encryption before being stored. We never store secrets in plain text. Secrets are permanently and irreversibly deleted after they are viewed or after their time limit expires. We use HTTPS to protect all data in transit.</p>
+
+  <h2>4. Data Retention</h2>
+  <p>Secrets are stored only for the duration you specify, with a maximum of 7 days. After a secret is viewed or expires, it is immediately and permanently deleted from our systems with no backup copies retained.</p>
+
+  <h2>5. Third-Party Services</h2>
+  <p>We use the following third-party services:</p>
+  <ul>
+    <li><strong>Google AdSense:</strong> We display advertisements served by Google AdSense. Google may use cookies to serve ads based on your prior visits to our website or other websites. You can opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank">Google Ads Settings</a>.</li>
+    <li><strong>Railway:</strong> Our hosting provider. Your data is processed on their infrastructure.</li>
+    <li><strong>Google Fonts:</strong> Used for typography. Google may collect usage data when fonts are loaded.</li>
+  </ul>
+
+  <h2>6. Cookies</h2>
+  <p>SingleReveal uses minimal cookies:</p>
+  <ul>
+    <li><strong>Theme preference:</strong> A local storage entry to remember your dark/light mode preference. This stays on your device and is never sent to our servers.</li>
+    <li><strong>Google AdSense cookies:</strong> Google uses cookies to serve relevant advertisements. See Google's Privacy Policy for more details.</li>
+  </ul>
+
+  <h2>7. Children's Privacy</h2>
+  <p>SingleReveal is not intended for use by children under the age of 13. We do not knowingly collect personal information from children under 13.</p>
+
+  <h2>8. Your Rights</h2>
+  <p>Since we do not collect personally identifiable information and secrets are automatically deleted, there is typically no personal data for us to retrieve, modify, or delete on your behalf. If you have concerns, please contact us.</p>
+
+  <h2>9. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. We will notify users of significant changes by updating the date at the top of this page.</p>
+
+  <h2>10. Contact Us</h2>
+  <p>If you have any questions about this Privacy Policy, please contact us at: <a href="mailto:privacy@singlereveal.com">privacy@singlereveal.com</a></p>
+</div>
+
+<footer>
+  <span>SingleReveal</span> · Secrets never stored in plain text · <a href="/">Back to home</a>
+</footer>
+
+</body>
+</html>
