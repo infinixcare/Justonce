@@ -1,5 +1,7 @@
+cat > /mnt/user-data/outputs/app.js << 'EOF'
 var API = 'https://www.singlereveal.com';
 
+// UI TOGGLES
 document.querySelectorAll('input[name="expiry"]').forEach(function(r) {
   r.addEventListener('change', function() {
     var v = document.querySelector('input[name="expiry"]:checked').value;
@@ -11,14 +13,69 @@ document.getElementById('passToggle').addEventListener('change', function() {
   document.getElementById('passwordRow').classList.toggle('show', this.checked);
 });
 
-document.getElementById('createBtn').addEventListener('click', async function() {
-  var text = document.getElementById('secretText').value.trim();
-  if (!text) { showToast('Please enter a secret first'); return; }
+// TAB SWITCHING
+document.getElementById('tabText').addEventListener('click', function() {
+  document.getElementById('tabText').classList.add('active');
+  document.getElementById('tabFile').classList.remove('active');
+  document.getElementById('textSection').style.display = 'block';
+  document.getElementById('fileSection').style.display = 'none';
+});
 
+document.getElementById('tabFile').addEventListener('click', function() {
+  document.getElementById('tabFile').classList.add('active');
+  document.getElementById('tabText').classList.remove('active');
+  document.getElementById('fileSection').style.display = 'block';
+  document.getElementById('textSection').style.display = 'none';
+});
+
+// FILE DROP ZONE
+var dropZone = document.getElementById('dropZone');
+var fileInput = document.getElementById('fileInput');
+var selectedFile = null;
+
+dropZone.addEventListener('click', function() { fileInput.click(); });
+
+dropZone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', function() {
+  dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (file) setSelectedFile(file);
+});
+
+fileInput.addEventListener('change', function() {
+  if (fileInput.files[0]) setSelectedFile(fileInput.files[0]);
+});
+
+function setSelectedFile(file) {
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = formatBytes(file.size);
+  document.getElementById('fileInfo').style.display = 'flex';
+  document.getElementById('dropText').style.display = 'none';
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// CREATE SECRET (text or file)
+document.getElementById('createBtn').addEventListener('click', async function() {
   var mode = document.querySelector('input[name="expiry"]:checked').value;
   var ttlSeconds = parseInt(document.getElementById('timeLimit').value);
   var usePass = document.getElementById('passToggle').checked;
   var password = document.getElementById('passInput').value;
+  var isFileTab = document.getElementById('tabFile').classList.contains('active');
 
   if (usePass && !password) { showToast('Please enter a password to protect it'); return; }
 
@@ -27,17 +84,39 @@ document.getElementById('createBtn').addEventListener('click', async function() 
   btn.disabled = true;
 
   try {
-    var body = { text: text, mode: mode };
-    if (mode === 'time' || mode === 'both') body.ttlSeconds = ttlSeconds;
-    if (usePass) body.password = password;
+    var res, data;
 
-    var res = await fetch(API + '/api/secrets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    if (isFileTab) {
+      if (!selectedFile) { showToast('Please select a file first'); btn.textContent = 'Generate secret link ->'; btn.disabled = false; return; }
+      if (selectedFile.size > 10 * 1024 * 1024) { showToast('File too large (max 10MB)'); btn.textContent = 'Generate secret link ->'; btn.disabled = false; return; }
 
-    var data = await res.json();
+      var formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('mode', mode);
+      if (mode === 'time' || mode === 'both') formData.append('ttlSeconds', ttlSeconds);
+      if (usePass) formData.append('password', password);
+
+      res = await fetch(API + '/api/files', {
+        method: 'POST',
+        body: formData
+      });
+
+    } else {
+      var text = document.getElementById('secretText').value.trim();
+      if (!text) { showToast('Please enter a secret first'); btn.textContent = 'Generate secret link ->'; btn.disabled = false; return; }
+
+      var body = { text: text, mode: mode };
+      if (mode === 'time' || mode === 'both') body.ttlSeconds = ttlSeconds;
+      if (usePass) body.password = password;
+
+      res = await fetch(API + '/api/secrets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+
+    data = await res.json();
     if (!res.ok) { showToast(data.error || 'Failed to create secret'); return; }
 
     var url = window.location.origin + window.location.pathname + '?s=' + data.id;
@@ -72,6 +151,7 @@ function formatTime(secs) {
   return (secs / 86400) + 'd';
 }
 
+// VIEW SECRET
 var viewTimer = null;
 var secretMeta = null;
 var revealed = false;
@@ -87,6 +167,14 @@ async function checkForSecret() {
     if (!res.ok) { showViewPage(); showDestroyed(); return; }
     secretMeta = await res.json();
     showViewPage();
+
+    if (secretMeta.type === 'file') {
+      document.getElementById('fileRevealInfo').style.display = 'block';
+      document.getElementById('fileRevealName').textContent = secretMeta.filename;
+      document.getElementById('fileRevealSize').textContent = formatBytes(secretMeta.size);
+      document.getElementById('revealOverlay').querySelector('.reveal-text').textContent = 'Click to download — file will self-destruct';
+    }
+
     if (secretMeta.passwordProtected) {
       document.getElementById('passGate').classList.add('show');
       document.getElementById('secretReveal').style.display = 'none';
@@ -125,22 +213,26 @@ document.getElementById('unlockBtn').addEventListener('click', async function() 
   var password = document.getElementById('gateInput').value;
   var errEl = document.getElementById('gateError');
   try {
-    var res = await fetch(API + '/api/secrets/' + currentId + '/reveal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: password })
-    });
-    var data = await res.json();
-    if (res.status === 401) { errEl.style.display = 'block'; return; }
-    if (!res.ok) { showDestroyed(); return; }
-    errEl.style.display = 'none';
-    document.getElementById('passGate').classList.remove('show');
-    document.getElementById('secretReveal').style.display = '';
-    document.getElementById('secretContent').textContent = data.text;
-    document.getElementById('secretContent').classList.remove('secret-blur');
-    document.getElementById('revealOverlay').style.display = 'none';
-    revealed = true;
-    showDestroyWarning(data.mode);
+    if (secretMeta && secretMeta.type === 'file') {
+      await downloadFile(password);
+    } else {
+      var res = await fetch(API + '/api/secrets/' + currentId + '/reveal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password })
+      });
+      var data = await res.json();
+      if (res.status === 401) { errEl.style.display = 'block'; return; }
+      if (!res.ok) { showDestroyed(); return; }
+      errEl.style.display = 'none';
+      document.getElementById('passGate').classList.remove('show');
+      document.getElementById('secretReveal').style.display = '';
+      document.getElementById('secretContent').textContent = data.text;
+      document.getElementById('secretContent').classList.remove('secret-blur');
+      document.getElementById('revealOverlay').style.display = 'none';
+      revealed = true;
+      showDestroyWarning(data.mode);
+    }
   } catch (err) {
     showToast('Network error');
   }
@@ -150,9 +242,55 @@ document.getElementById('gateInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') document.getElementById('unlockBtn').click();
 });
 
+async function downloadFile(password) {
+  var errEl = document.getElementById('gateError');
+  try {
+    var res = await fetch(API + '/api/secrets/' + currentId + '/reveal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: password || '' })
+    });
+
+    if (res.status === 401) {
+      if (errEl) errEl.style.display = 'block';
+      return;
+    }
+    if (!res.ok) { showDestroyed(); return; }
+
+    var mode = res.headers.get('X-Secret-Mode');
+    var blob = await res.blob();
+    var filename = secretMeta.filename || 'secret-file';
+
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+
+    document.getElementById('passGate').classList.remove('show');
+    document.getElementById('revealOverlay').style.display = 'none';
+    revealed = true;
+
+    if (mode === 'view' || mode === 'both') {
+      showDestroyWarning('view');
+    }
+
+  } catch (err) {
+    showToast('Download failed - please try again');
+  }
+}
+
 async function revealSecret() {
   if (revealed) return;
   revealed = true;
+
+  if (secretMeta && secretMeta.type === 'file') {
+    await downloadFile('');
+    return;
+  }
+
   try {
     var res = await fetch(API + '/api/secrets/' + currentId + '/reveal', {
       method: 'POST',
@@ -210,6 +348,7 @@ function toggleTheme() {
 }
 
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
 var saved = localStorage.getItem('theme');
 if (saved === 'light') {
   document.body.classList.add('light');
@@ -218,3 +357,4 @@ if (saved === 'light') {
 }
 
 checkForSecret();
+EOF
