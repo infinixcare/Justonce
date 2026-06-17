@@ -132,53 +132,67 @@ function generatePassword() {
     return;
   }
 
-  // Build a pool of words short enough to be useful
-  var usable = WORD_POOL.filter(function(w) { return w.length <= targetLen - 2; });
-  if (!usable.length) usable = WORD_POOL.slice(0, 10);
+  // --- Strategy: build a fixed TEMPLATE then fill it with words ---
+  // Template slots: S=symbol, N=number, W=word-chunk
+  // e.g. targetLen=12, symbols+numbers → &Cobra3!Fox9  (S W N S W N)
+  // We pick 2 words that together with separators fill exactly targetLen.
 
-  var result = '';
-  var attempts = 0;
+  // 1. Reserve space for separators
+  var symSlots  = symbols ? 2 : 0;   // one before each word
+  var numSlots  = numbers ? 2 : 0;   // one after each word
+  var sepTotal  = symSlots + numSlots;
+  var wordSpace = targetLen - sepTotal;
 
-  while (result.length < targetLen && attempts < 200) {
-    attempts++;
-    var remaining = targetLen - result.length;
+  // 2. Find two words whose combined length equals wordSpace (±1 handled by trim/pad)
+  var usable = WORD_POOL.filter(function(w) { return w.length >= 2 && w.length <= wordSpace - 2; });
+  if (!usable.length) usable = WORD_POOL.slice(0, 20);
 
-    // Decide what to insert next
-    var canWord   = usable.some(function(w) { return w.length <= remaining; });
-    var canNum    = numbers && remaining >= 1;
-    var canSym    = symbols && remaining >= 1;
+  var word1, word2;
+  var found = false;
 
-    // Weighted choice — prefer words when there's room
-    var choices = [];
-    if (canWord) { choices.push('word'); choices.push('word'); choices.push('word'); }
-    if (canNum)  { choices.push('num'); }
-    if (canSym)  { choices.push('sym'); }
-    if (!choices.length) break;
-
-    var pick = randFrom(choices);
-
-    if (pick === 'word') {
-      var fits = usable.filter(function(w) { return w.length <= remaining; });
-      if (!fits.length) { result += numbers ? randFrom(NUM_CHARS) : randFrom(SYM_POOL); continue; }
-      var word = randFrom(fits);
-      word = applyCase(word, upper, lower);
-      word = leet(word, numbers);
-      result += word;
-    } else if (pick === 'num') {
-      result += randFrom(NUM_CHARS);
-    } else {
-      result += randFrom(SYM_POOL);
+  // Try up to 100 combos to hit exact wordSpace
+  for (var t = 0; t < 100; t++) {
+    word1 = randFrom(usable);
+    var need = wordSpace - word1.length;
+    var candidates = usable.filter(function(w) { return w.length === need; });
+    if (candidates.length) {
+      word2 = randFrom(candidates);
+      found = true;
+      break;
     }
   }
+  // Fallback: just pick any two words and we'll trim/pad at the end
+  if (!found) {
+    word1 = randFrom(usable);
+    word2 = randFrom(usable.filter(function(w) { return w !== word1; }) || usable);
+  }
 
-  // Trim or pad to exact length
+  // 3. Apply case
+  function styleWord(w) {
+    if (upper && lower) return w[0].toUpperCase() + w.slice(1).toLowerCase();
+    if (upper) return w.toUpperCase();
+    return w.toLowerCase();
+  }
+  word1 = styleWord(word1);
+  word2 = styleWord(word2);
+
+  // 4. Assemble: [sym] word1 [num] [sym] word2 [num]
+  var result = '';
+  if (symbols) result += randFrom(SYM_POOL);
+  result += word1;
+  if (numbers) result += randFrom(NUM_CHARS);
+  if (symbols) result += randFrom(SYM_POOL);
+  result += word2;
+  if (numbers) result += randFrom(NUM_CHARS);
+
+  // 5. Trim or pad to exact targetLen
   if (result.length > targetLen) {
     result = result.slice(0, targetLen);
   }
   while (result.length < targetLen) {
     if (numbers) result += randFrom(NUM_CHARS);
     else if (symbols) result += randFrom(SYM_POOL);
-    else result += upper ? 'X' : 'x';
+    else result += upper ? randFrom('ABCDEFGHJKLMNPQRSTUVWXYZ'.split('')) : randFrom('abcdefghjkmnpqrstuvwxyz'.split(''));
   }
 
   generatedPassword = result;
