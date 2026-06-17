@@ -69,80 +69,123 @@ document.getElementById('tabPassGen').addEventListener('click', function() { set
 // PASSWORD GENERATOR
 var generatedPassword = '';
 
+// Word pool — varied lengths so we can hit exact character targets
 var WORD_POOL = [
-  'Cobra','Tiger','Falcon','Storm','Blaze','Frost','Raven','Atlas','Nova','Onyx',
-  'Ember','Viper','Cedar','Flint','Halo','Jade','Lynx','Maple','Orbit','Pixel',
-  'Quartz','Ridge','Solar','Titan','Ultra','Vapor','Walnut','Xenon','Yield','Zeal',
-  'Arrow','Bison','Crane','Delta','Eagle','Finch','Globe','Haven','Ivory','Joker',
-  'Karma','Lemon','Mango','Night','Ocean','Pearl','Queen','Robin','Swift','Topaz'
+  'cobra','tiger','falcon','storm','blaze','frost','raven','atlas','nova','onyx',
+  'ember','viper','cedar','flint','halo','jade','lynx','maple','orbit','pixel',
+  'quartz','ridge','solar','titan','ultra','vapor','walnut','xenon','yield','zeal',
+  'arrow','bison','crane','delta','eagle','finch','globe','haven','ivory','joker',
+  'karma','lemon','mango','night','ocean','pearl','queen','robin','swift','topaz',
+  'brick','cloud','dusk','echo','fence','grain','hedge','inlet','jewel','knot',
+  'lunar','marsh','nerve','prism','quest','resin','shrimp','thorn','umbra','vault',
+  'wheat','axiom','brace','chime','drift','flare','glyph','hinge','iris','judge'
 ];
 
+var SYM_POOL = ['!','@','#','$','%','&','*','+','=','?','^','~'];
+var NUM_CHARS = ['0','1','2','3','4','5','6','7','8','9'];
+
+// leet substitutions: letter → possible replacements
+var LEET = { a:'4', e:'3', i:'1', o:'0', s:'5', t:'7', b:'8', g:'9' };
+
 function randInt(max) {
-  var arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return arr[0] % max;
+  var a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] % max;
 }
 
-function pickWord() {
-  return WORD_POOL[randInt(WORD_POOL.length)];
+function randFrom(arr) { return arr[randInt(arr.length)]; }
+
+function applyCase(word, upper, lower) {
+  if (upper && lower) {
+    // Title case
+    return word[0].toUpperCase() + word.slice(1).toLowerCase();
+  } else if (upper) {
+    return word.toUpperCase();
+  }
+  return word.toLowerCase();
 }
 
-function randNum(digits) {
-  var arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  var max = Math.pow(10, digits);
-  var min = Math.pow(10, digits - 1);
-  return String(min + (arr[0] % (max - min))).padStart(digits, '0');
+function leet(word, numbers) {
+  // Randomly substitute 1–2 letters with leet equivalents (only if numbers on)
+  if (!numbers) return word;
+  var chars = word.split('');
+  var swapped = 0;
+  for (var i = 0; i < chars.length && swapped < 2; i++) {
+    var c = chars[i].toLowerCase();
+    if (LEET[c] && randInt(3) === 0) {
+      chars[i] = LEET[c];
+      swapped++;
+    }
+  }
+  return chars.join('');
 }
 
 function generatePassword() {
-  var upper = document.getElementById('optUpper').checked;
-  var lower = document.getElementById('optLower').checked;
+  var targetLen = parseInt(document.getElementById('passLenRange').value);
+  var upper   = document.getElementById('optUpper').checked;
+  var lower   = document.getElementById('optLower').checked;
   var numbers = document.getElementById('optNumbers').checked;
   var symbols = document.getElementById('optSymbols').checked;
-  var wordCount = parseInt(document.getElementById('passLenRange').value);
 
   if (!upper && !lower) {
-    showToast('Enable uppercase or lowercase for word-based passwords');
+    showToast('Enable uppercase or lowercase');
     return;
   }
 
-  var SYMBOLS = ['!','@','#','$','%','&','*','+','=','?'];
-  var parts = [];
+  // Build a pool of words short enough to be useful
+  var usable = WORD_POOL.filter(function(w) { return w.length <= targetLen - 2; });
+  if (!usable.length) usable = WORD_POOL.slice(0, 10);
 
-  for (var i = 0; i < wordCount; i++) {
-    var word = pickWord();
+  var result = '';
+  var attempts = 0;
 
-    // Apply case style
-    if (upper && lower) {
-      // Mixed: first letter upper, rest lower (default word style)
-      word = word[0].toUpperCase() + word.slice(1).toLowerCase();
-    } else if (upper) {
-      word = word.toUpperCase();
+  while (result.length < targetLen && attempts < 200) {
+    attempts++;
+    var remaining = targetLen - result.length;
+
+    // Decide what to insert next
+    var canWord   = usable.some(function(w) { return w.length <= remaining; });
+    var canNum    = numbers && remaining >= 1;
+    var canSym    = symbols && remaining >= 1;
+
+    // Weighted choice — prefer words when there's room
+    var choices = [];
+    if (canWord) { choices.push('word'); choices.push('word'); choices.push('word'); }
+    if (canNum)  { choices.push('num'); }
+    if (canSym)  { choices.push('sym'); }
+    if (!choices.length) break;
+
+    var pick = randFrom(choices);
+
+    if (pick === 'word') {
+      var fits = usable.filter(function(w) { return w.length <= remaining; });
+      if (!fits.length) { result += numbers ? randFrom(NUM_CHARS) : randFrom(SYM_POOL); continue; }
+      var word = randFrom(fits);
+      word = applyCase(word, upper, lower);
+      word = leet(word, numbers);
+      result += word;
+    } else if (pick === 'num') {
+      result += randFrom(NUM_CHARS);
     } else {
-      word = word.toLowerCase();
-    }
-
-    parts.push(word);
-
-    // Insert numbers between/after words
-    if (numbers) {
-      parts.push(randNum(2));
-    }
-
-    // Insert symbol after some words
-    if (symbols && (i < wordCount - 1 || numbers === false)) {
-      parts.push(SYMBOLS[randInt(SYMBOLS.length)]);
+      result += randFrom(SYM_POOL);
     }
   }
 
-  var password = parts.join('');
-  generatedPassword = password;
+  // Trim or pad to exact length
+  if (result.length > targetLen) {
+    result = result.slice(0, targetLen);
+  }
+  while (result.length < targetLen) {
+    if (numbers) result += randFrom(NUM_CHARS);
+    else if (symbols) result += randFrom(SYM_POOL);
+    else result += upper ? 'X' : 'x';
+  }
 
-  document.getElementById('passGenValue').textContent = password;
+  generatedPassword = result;
+  document.getElementById('passGenValue').textContent = result;
   document.getElementById('passGenCopy').style.display = 'block';
   document.getElementById('passGenUseRow').style.display = 'block';
-  updateStrength(password, upper, lower, numbers, symbols);
+  updateStrength(result, upper, lower, numbers, symbols);
 }
 
 function updateStrength(password, upper, lower, numbers, symbols) {
@@ -171,7 +214,7 @@ function updateStrength(password, upper, lower, numbers, symbols) {
 }
 
 document.getElementById('passLenRange').addEventListener('input', function() {
-  document.getElementById('passLenDisplay').textContent = this.value;
+  document.getElementById('passLenDisplay').textContent = this.value + ' chars';
   if (generatedPassword) generatePassword();
 });
 
