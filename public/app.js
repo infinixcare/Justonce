@@ -139,15 +139,19 @@ function generatePassword() {
     return w.toLowerCase();
   }
 
-  // Reasonable word length range relative to target, so we don't pick a
-  // 12-letter word for an 8-char password
-  var maxWordLen = Math.max(3, Math.floor(targetLen * 0.45));
+  // Reserve guaranteed space for separators so enabled options always show up
+  var sepCount = (numbers ? 1 : 0) + (symbols ? 1 : 0); // at least 1 char per enabled type, doubled below
+  var reservedSep = sepCount * 2; // ensure at least 2 separator chars total when any are enabled
+  if (reservedSep > targetLen - 4) reservedSep = Math.max(0, targetLen - 4); // keep room for words
+
+  var wordBudget = targetLen - reservedSep;
+  var maxWordLen = Math.max(2, Math.floor(wordBudget * 0.55));
   var pool = WORD_POOL.filter(function(w) { return w.length <= maxWordLen; });
   if (!pool.length) pool = WORD_POOL.slice().sort(function(a,b){return a.length-b.length;}).slice(0, 30);
 
-  // Pick word1, then pick word2 so that word1+word2 never exceeds targetLen
+  // Pick word1, then pick word2 so that word1+word2 fits within wordBudget
   var word1Raw = randFrom(pool);
-  var maxWord2Len = Math.max(2, targetLen - word1Raw.length - (numbers || symbols ? 0 : 0));
+  var maxWord2Len = Math.max(2, wordBudget - word1Raw.length);
   var pool2 = pool.filter(function(w) { return w.length <= maxWord2Len; });
   if (!pool2.length) pool2 = pool.slice().sort(function(a,b){return a.length-b.length;}).slice(0, 10);
   var word2Raw = randFrom(pool2);
@@ -160,35 +164,49 @@ function generatePassword() {
   var remaining = targetLen - used;
   if (remaining < 0) remaining = 0;
 
-  // Split remaining space across up to 3 separator gaps: before word1,
-  // between words, after word2
-  var gap1 = 0, gap2 = 0, gap3 = 0;
-  for (var i = 0; i < remaining; i++) {
-    var gapChoice = i % 3;
-    if (gapChoice === 0) gap2++;
-    else if (gapChoice === 1) gap1++;
-    else gap3++;
-  }
-
-  function fillChars(count) {
-    var s = '';
-    for (var j = 0; j < count; j++) {
-      if (numbers && symbols) s += (j % 2 === 0 ? randFrom(NUM_CHARS) : randFrom(SYM_POOL));
-      else if (numbers) s += randFrom(NUM_CHARS);
-      else if (symbols) s += randFrom(SYM_POOL);
-      else s += upper ? randFrom('ABCDEFGHJKLMNPQRSTUVWXYZ'.split('')) : randFrom('abcdefghjkmnpqrstuvwxyz'.split(''));
+  // Build the exact list of separator chars first, guaranteeing both types
+  // appear at least once when both numbers and symbols are enabled.
+  var sepChars = [];
+  if (numbers && symbols) {
+    if (remaining >= 1) sepChars.push(randFrom(NUM_CHARS));
+    if (remaining >= 2) sepChars.push(randFrom(SYM_POOL));
+    while (sepChars.length < remaining) {
+      sepChars.push(randInt(2) === 0 ? randFrom(NUM_CHARS) : randFrom(SYM_POOL));
     }
-    return s;
+  } else if (numbers) {
+    while (sepChars.length < remaining) sepChars.push(randFrom(NUM_CHARS));
+  } else if (symbols) {
+    while (sepChars.length < remaining) sepChars.push(randFrom(SYM_POOL));
+  } else {
+    var fillerSet = upper ? 'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('') : 'abcdefghjkmnpqrstuvwxyz'.split('');
+    while (sepChars.length < remaining) sepChars.push(randFrom(fillerSet));
   }
 
-  var result = fillChars(gap1) + word1 + fillChars(gap2) + word2 + fillChars(gap3);
+  // Shuffle so number/symbol placement isn't predictable (Fisher-Yates)
+  for (var k = sepChars.length - 1; k > 0; k--) {
+    var swapIdx = randInt(k + 1);
+    var tmp = sepChars[k];
+    sepChars[k] = sepChars[swapIdx];
+    sepChars[swapIdx] = tmp;
+  }
 
-  // Safety: trim or pad to exact targetLen
+  // Distribute shuffled separator chars across 3 gaps: before word1, between words, after word2
+  var gap1 = Math.floor(sepChars.length / 3);
+  var gap2 = Math.floor(sepChars.length / 3);
+  var gap3 = sepChars.length - gap1 - gap2;
+
+  var result = sepChars.slice(0, gap1).join('') + word1 +
+               sepChars.slice(gap1, gap1 + gap2).join('') + word2 +
+               sepChars.slice(gap1 + gap2).join('');
+
+  // Safety: trim or pad to exact targetLen (should already be exact)
   if (result.length > targetLen) {
     result = result.slice(0, targetLen);
   }
   while (result.length < targetLen) {
-    result += fillChars(1);
+    if (numbers) result += randFrom(NUM_CHARS);
+    else if (symbols) result += randFrom(SYM_POOL);
+    else result += upper ? randFrom('ABCDEFGHJKLMNPQRSTUVWXYZ'.split('')) : randFrom('abcdefghjkmnpqrstuvwxyz'.split(''));
   }
 
   generatedPassword = result;
