@@ -135,12 +135,31 @@ body.light .reveal-overlay { background: rgba(244,244,248,0.6); }
 .step-text { font-size: 0.72rem; color: var(--muted); line-height: 1.6; text-align: center; }
 .step-text strong { display: block; color: var(--text); font-weight: 400; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
 footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; transition: border-color 0.3s; }
-footer span { color: var(--accent); }
-footer a { color: var(--muted); text-decoration: none; }
-footer a:hover { color: var(--accent); }
+
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border-glow); border-radius: 10px; padding: 12px 24px; font-size: 0.78rem; color: var(--text); z-index: 300; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; opacity: 0; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-@media (max-width: 500px) {
+/* PASSWORD GENERATOR */
+.passgen-output { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(124,106,255,0.07); border: 1px solid rgba(124,106,255,0.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; min-height: 48px; }
+#passGenValue { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--text); word-break: break-all; flex: 1; letter-spacing: 0.04em; }
+.passgen-controls { display: flex; flex-direction: column; gap: 14px; }
+.passgen-length-row { display: flex; align-items: center; gap: 14px; }
+.passgen-length-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; min-width: 80px; }
+.passgen-length-label strong { color: var(--accent); }
+.passgen-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: var(--border); border-radius: 4px; outline: none; cursor: pointer; }
+.passgen-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 8px rgba(124,106,255,0.5); }
+.passgen-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: none; }
+.passgen-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.passgen-check { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--muted); cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.2s, background 0.2s; user-select: none; }
+.passgen-check:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.passgen-check input { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+.passgen-strength-row { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.passgen-strength-label { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+.passgen-strength-bar { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.passgen-strength-bar div { height: 100%; border-radius: 4px; width: 0%; transition: width 0.4s ease, background 0.4s ease; }
+.passgen-strength-text { font-size: 0.68rem; white-space: nowrap; min-width: 40px; }
+.btn-use-secret { width: 100%; padding: 12px; background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(124,106,255,0.3); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.04em; border-radius: 12px; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+.btn-use-secret:hover { background: rgba(124,106,255,0.25); box-shadow: 0 4px 16px rgba(124,106,255,0.2); }
+
   nav { padding: 16px 20px; }
   .nav-tag { display: none; }
   .card, .view-card { padding: 28px 20px; }
@@ -177,6 +196,7 @@ footer a:hover { color: var(--accent); }
       <div class="tabs">
         <button class="tab active" id="tabText">Text secret</button>
         <button class="tab" id="tabFile">File upload</button>
+        <button class="tab" id="tabPassGen">Password gen</button>
       </div>
 
       <div id="textSection">
@@ -200,7 +220,37 @@ footer a:hover { color: var(--accent); }
         <input type="file" id="fileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip,.doc,.docx" />
       </div>
 
-      <div class="options-row">
+      <div id="passGenSection" style="display:none">
+        <div class="section-label">Generated password</div>
+        <div class="passgen-output" id="passGenOutput">
+          <span id="passGenValue">Click generate to create a password</span>
+          <button class="btn-copy" id="passGenCopy" style="display:none">Copy</button>
+        </div>
+        <div class="passgen-controls">
+          <div class="passgen-length-row">
+            <span class="passgen-length-label">Length: <strong id="passLenDisplay">16</strong></span>
+            <input type="range" id="passLenRange" min="8" max="64" value="16" class="passgen-slider" />
+          </div>
+          <div class="passgen-options">
+            <label class="passgen-check"><input type="checkbox" id="optUpper" checked /> Uppercase (A–Z)</label>
+            <label class="passgen-check"><input type="checkbox" id="optLower" checked /> Lowercase (a–z)</label>
+            <label class="passgen-check"><input type="checkbox" id="optNumbers" checked /> Numbers (0–9)</label>
+            <label class="passgen-check"><input type="checkbox" id="optSymbols" /> Symbols (!@#$...)</label>
+          </div>
+          <div class="passgen-strength-row">
+            <span class="passgen-strength-label">Strength:</span>
+            <div class="passgen-strength-bar"><div id="passStrengthFill"></div></div>
+            <span id="passStrengthText" class="passgen-strength-text">—</span>
+          </div>
+        </div>
+        <button class="btn-create" id="genPassBtn" style="margin-top:16px">Generate password</button>
+        <div id="passGenUseRow" style="display:none;margin-top:12px">
+          <button class="btn-use-secret" id="useAsSecretBtn">Use as secret → share link</button>
+        </div>
+      </div>
+
+      <div class="options-row" id="secretOptions">
+
         <div class="toggle-group">
           <input type="radio" name="expiry" id="onView" value="view" checked />
           <label for="onView">On view</label>
