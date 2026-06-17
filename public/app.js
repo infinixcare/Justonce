@@ -71,21 +71,43 @@ var generatedPassword = '';
 
 // Word pool — varied lengths so we can hit exact character targets
 var WORD_POOL = [
-  'cobra','tiger','falcon','storm','blaze','frost','raven','atlas','nova','onyx',
-  'ember','viper','cedar','flint','halo','jade','lynx','maple','orbit','pixel',
-  'quartz','ridge','solar','titan','ultra','vapor','walnut','xenon','yield','zeal',
-  'arrow','bison','crane','delta','eagle','finch','globe','haven','ivory','joker',
-  'karma','lemon','mango','night','ocean','pearl','queen','robin','swift','topaz',
-  'brick','cloud','dusk','echo','fence','grain','hedge','inlet','jewel','knot',
-  'lunar','marsh','nerve','prism','quest','resin','shrimp','thorn','umbra','vault',
-  'wheat','axiom','brace','chime','drift','flare','glyph','hinge','iris','judge'
+  'cobra','tiger','falcon','raven','viper','lynx','bison','crane','eagle','finch',
+  'robin','swift','shrimp','gecko','moose','otter','panda','quail','skunk','trout',
+  'whale','zebra','camel','dingo','ferret','goose','hyena','iguana','jackal','koala',
+  'llama','mamba','newt','okapi','parrot','rhino','sloth','tapir','urial','vole',
+  'wombat','yak','alpaca','baboon','condor','donkey','emu','foxhound','gibbon','heron',
+  'impala','jaguar','kestrel','lemur','meerkat','narwhal','osprey','pelican','quokka','raccoon',
+  'salmon','toucan','urchin','vulture','walrus','xerus','yellowfin','zorilla','coyote','storm',
+  'blaze','frost','ember','cedar','flint','maple','orbit','ridge','solar','vapor',
+  'walnut','xenon','lunar','marsh','prism','thorn','vault','wheat','axiom','brace',
+  'chime','drift','flare','glyph','hinge','iris','knot','lava','mist','nova',
+  'onyx','pixel','quartz','resin','slate','titan','ultra','willow','zinc','abyss',
+  'birch','crest','dune','fjord','grove','haven','inlet','jade','kelp','lichen',
+  'mosaic','nimbus','opal','pebble','quarry','ravine','summit','tundra','valley','canyon',
+  'delta','escarp','forest','glacier','harbor','island','jungle','karst','lagoon','meadow',
+  'nebula','outcrop','plateau','quiver','reef','savanna','taiga','uplift','wetland','arrow',
+  'atlas','anchor','anvil','badge','beacon','blade','bolt','bridge','brush','cable',
+  'cipher','clock','comet','compass','core','crown','crystal','cursor','dagger','deck',
+  'diesel','domain','draft','drill','drone','dynamo','engine','epoch','factor','flame',
+  'flask','forge','frame','fuel','fulcrum','gadget','gauge','gear','globe','hammer',
+  'helix','hook','hull','index','ingot','input','kernel','laser','lathe','layer',
+  'ledger','lens','lever','linker','logic','magnet','matrix','mirror','module','motor',
+  'mutex','nerve','nexus','node','notch','nozzle','nucleus','offset','optic','output',
+  'oxide','panel','patch','payload','phase','pilot','pipe','pivot','plank','plasma',
+  'plugin','pointer','portal','probe','proxy','pulse','pump','qubit','radar','radius',
+  'relay','render','riser','rotor','router','scalar','scope','sensor','servo','shader',
+  'signal','socket','spawn','spool','stack','strobe','struct','switch','tensor','thread',
+  'toggle','token','torque','tracer','tunnel','turbo','vector','vertex','warden','wedge',
+  'widget','wiring','wrench','zener','zenith','buffer','cache','codec','shadow','phantom',
+  'legend','specter','mystic','cosmic','arcane','primal','quantum','eternal','radiant','crimson',
+  'silver','golden','blazing','frozen','hidden','sacred','ancient','mighty','fierce','silent',
+  'hollow','broken','rising','fallen','bound','unbound','venom','valor','virtue','vision',
+  'vigil','vortex','verdict','verify','vivid','vocal','wrath','whisper','wonder','wander',
+  'weave','witch','wolven'
 ];
 
 var SYM_POOL = ['!','@','#','$','%','&','*','+','=','?','^','~'];
 var NUM_CHARS = ['0','1','2','3','4','5','6','7','8','9'];
-
-// leet substitutions: letter → possible replacements
-var LEET = { a:'4', e:'3', i:'1', o:'0', s:'5', t:'7', b:'8', g:'9' };
 
 function randInt(max) {
   var a = new Uint32Array(1);
@@ -94,31 +116,6 @@ function randInt(max) {
 }
 
 function randFrom(arr) { return arr[randInt(arr.length)]; }
-
-function applyCase(word, upper, lower) {
-  if (upper && lower) {
-    // Title case
-    return word[0].toUpperCase() + word.slice(1).toLowerCase();
-  } else if (upper) {
-    return word.toUpperCase();
-  }
-  return word.toLowerCase();
-}
-
-function leet(word, numbers) {
-  // Randomly substitute 1–2 letters with leet equivalents (only if numbers on)
-  if (!numbers) return word;
-  var chars = word.split('');
-  var swapped = 0;
-  for (var i = 0; i < chars.length && swapped < 2; i++) {
-    var c = chars[i].toLowerCase();
-    if (LEET[c] && randInt(3) === 0) {
-      chars[i] = LEET[c];
-      swapped++;
-    }
-  }
-  return chars.join('');
-}
 
 function generatePassword() {
   var targetLen = parseInt(document.getElementById('passLenRange').value);
@@ -132,67 +129,66 @@ function generatePassword() {
     return;
   }
 
-  // --- Strategy: build a fixed TEMPLATE then fill it with words ---
-  // Template slots: S=symbol, N=number, W=word-chunk
-  // e.g. targetLen=12, symbols+numbers → &Cobra3!Fox9  (S W N S W N)
-  // We pick 2 words that together with separators fill exactly targetLen.
+  // --- Strategy: pick 2 random words, then pad/trim with numbers+symbols ---
+  // This keeps word choice fully random (no bias toward short filler words),
+  // and uses the separators to absorb the leftover length.
 
-  // 1. Reserve space for separators
-  var symSlots  = symbols ? 2 : 0;   // one before each word
-  var numSlots  = numbers ? 2 : 0;   // one after each word
-  var sepTotal  = symSlots + numSlots;
-  var wordSpace = targetLen - sepTotal;
-
-  // 2. Find two words whose combined length equals wordSpace (±1 handled by trim/pad)
-  var usable = WORD_POOL.filter(function(w) { return w.length >= 2 && w.length <= wordSpace - 2; });
-  if (!usable.length) usable = WORD_POOL.slice(0, 20);
-
-  var word1, word2;
-  var found = false;
-
-  // Try up to 100 combos to hit exact wordSpace
-  for (var t = 0; t < 100; t++) {
-    word1 = randFrom(usable);
-    var need = wordSpace - word1.length;
-    var candidates = usable.filter(function(w) { return w.length === need; });
-    if (candidates.length) {
-      word2 = randFrom(candidates);
-      found = true;
-      break;
-    }
-  }
-  // Fallback: just pick any two words and we'll trim/pad at the end
-  if (!found) {
-    word1 = randFrom(usable);
-    word2 = randFrom(usable.filter(function(w) { return w !== word1; }) || usable);
-  }
-
-  // 3. Apply case
   function styleWord(w) {
     if (upper && lower) return w[0].toUpperCase() + w.slice(1).toLowerCase();
     if (upper) return w.toUpperCase();
     return w.toLowerCase();
   }
-  word1 = styleWord(word1);
-  word2 = styleWord(word2);
 
-  // 4. Assemble: [sym] word1 [num] [sym] word2 [num]
-  var result = '';
-  if (symbols) result += randFrom(SYM_POOL);
-  result += word1;
-  if (numbers) result += randFrom(NUM_CHARS);
-  if (symbols) result += randFrom(SYM_POOL);
-  result += word2;
-  if (numbers) result += randFrom(NUM_CHARS);
+  // Reasonable word length range relative to target, so we don't pick a
+  // 12-letter word for an 8-char password
+  var maxWordLen = Math.max(3, Math.floor(targetLen * 0.45));
+  var pool = WORD_POOL.filter(function(w) { return w.length <= maxWordLen; });
+  if (!pool.length) pool = WORD_POOL.slice().sort(function(a,b){return a.length-b.length;}).slice(0, 30);
 
-  // 5. Trim or pad to exact targetLen
+  // Pick word1, then pick word2 so that word1+word2 never exceeds targetLen
+  var word1Raw = randFrom(pool);
+  var maxWord2Len = Math.max(2, targetLen - word1Raw.length - (numbers || symbols ? 0 : 0));
+  var pool2 = pool.filter(function(w) { return w.length <= maxWord2Len; });
+  if (!pool2.length) pool2 = pool.slice().sort(function(a,b){return a.length-b.length;}).slice(0, 10);
+  var word2Raw = randFrom(pool2);
+
+  var word1 = styleWord(word1Raw);
+  var word2 = styleWord(word2Raw);
+
+  // Build the separator characters (numbers/symbols) to fill remaining space
+  var used = word1.length + word2.length;
+  var remaining = targetLen - used;
+  if (remaining < 0) remaining = 0;
+
+  // Split remaining space across up to 3 separator gaps: before word1,
+  // between words, after word2
+  var gap1 = 0, gap2 = 0, gap3 = 0;
+  for (var i = 0; i < remaining; i++) {
+    var gapChoice = i % 3;
+    if (gapChoice === 0) gap2++;
+    else if (gapChoice === 1) gap1++;
+    else gap3++;
+  }
+
+  function fillChars(count) {
+    var s = '';
+    for (var j = 0; j < count; j++) {
+      if (numbers && symbols) s += (j % 2 === 0 ? randFrom(NUM_CHARS) : randFrom(SYM_POOL));
+      else if (numbers) s += randFrom(NUM_CHARS);
+      else if (symbols) s += randFrom(SYM_POOL);
+      else s += upper ? randFrom('ABCDEFGHJKLMNPQRSTUVWXYZ'.split('')) : randFrom('abcdefghjkmnpqrstuvwxyz'.split(''));
+    }
+    return s;
+  }
+
+  var result = fillChars(gap1) + word1 + fillChars(gap2) + word2 + fillChars(gap3);
+
+  // Safety: trim or pad to exact targetLen
   if (result.length > targetLen) {
     result = result.slice(0, targetLen);
   }
   while (result.length < targetLen) {
-    if (numbers) result += randFrom(NUM_CHARS);
-    else if (symbols) result += randFrom(SYM_POOL);
-    else result += upper ? randFrom('ABCDEFGHJKLMNPQRSTUVWXYZ'.split('')) : randFrom('abcdefghjkmnpqrstuvwxyz'.split(''));
+    result += fillChars(1);
   }
 
   generatedPassword = result;
