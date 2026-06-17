@@ -36,18 +36,118 @@ document.getElementById('passToggle').addEventListener('change', function() {
 });
 
 // TABS
-document.getElementById('tabText').addEventListener('click', function() {
-  document.getElementById('tabText').classList.add('active');
-  document.getElementById('tabFile').classList.remove('active');
-  document.getElementById('textSection').style.display = 'block';
-  document.getElementById('fileSection').style.display = 'none';
+function setTab(active) {
+  var tabs = ['tabText', 'tabFile', 'tabPassGen'];
+  var sections = ['textSection', 'fileSection', 'passGenSection'];
+  var secretOptions = document.getElementById('secretOptions');
+  var encryptRow = document.querySelector('.encrypt-row');
+  var passwordRow = document.getElementById('passwordRow');
+  var createBtn = document.getElementById('createBtn');
+
+  tabs.forEach(function(t) { document.getElementById(t).classList.remove('active'); });
+  sections.forEach(function(s) { document.getElementById(s).style.display = 'none'; });
+
+  document.getElementById(active).classList.add('active');
+  var sectionMap = { tabText: 'textSection', tabFile: 'fileSection', tabPassGen: 'passGenSection' };
+  document.getElementById(sectionMap[active]).style.display = 'block';
+
+  var isPassGen = active === 'tabPassGen';
+  secretOptions.style.display = isPassGen ? 'none' : '';
+  encryptRow.style.display = isPassGen ? 'none' : '';
+  passwordRow.style.display = 'none';
+  if (isPassGen) {
+    createBtn.style.display = 'none';
+  } else {
+    createBtn.style.display = '';
+  }
+}
+
+document.getElementById('tabText').addEventListener('click', function() { setTab('tabText'); });
+document.getElementById('tabFile').addEventListener('click', function() { setTab('tabFile'); });
+document.getElementById('tabPassGen').addEventListener('click', function() { setTab('tabPassGen'); });
+
+// PASSWORD GENERATOR
+var generatedPassword = '';
+
+function generatePassword() {
+  var len = parseInt(document.getElementById('passLenRange').value);
+  var upper = document.getElementById('optUpper').checked;
+  var lower = document.getElementById('optLower').checked;
+  var numbers = document.getElementById('optNumbers').checked;
+  var symbols = document.getElementById('optSymbols').checked;
+
+  var charset = '';
+  if (upper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (lower) charset += 'abcdefghijklmnopqrstuvwxyz';
+  if (numbers) charset += '0123456789';
+  if (symbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+  if (!charset) {
+    showToast('Select at least one character type');
+    return;
+  }
+
+  var arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  var password = Array.from(arr).map(function(v) { return charset[v % charset.length]; }).join('');
+  generatedPassword = password;
+
+  document.getElementById('passGenValue').textContent = password;
+  document.getElementById('passGenCopy').style.display = 'block';
+  document.getElementById('passGenUseRow').style.display = 'block';
+  updateStrength(password, upper, lower, numbers, symbols);
+}
+
+function updateStrength(password, upper, lower, numbers, symbols) {
+  var score = 0;
+  var len = password.length;
+  if (len >= 12) score++;
+  if (len >= 16) score++;
+  if (len >= 24) score++;
+  var typeCount = [upper, lower, numbers, symbols].filter(Boolean).length;
+  score += typeCount - 1;
+
+  var fill = document.getElementById('passStrengthFill');
+  var label = document.getElementById('passStrengthText');
+  var levels = [
+    { pct: '20%', color: '#ff4d6d', text: 'Weak' },
+    { pct: '40%', color: '#f59e0b', text: 'Fair' },
+    { pct: '60%', color: '#f59e0b', text: 'Good' },
+    { pct: '80%', color: '#2dd4a0', text: 'Strong' },
+    { pct: '100%', color: '#2dd4a0', text: 'Very strong' }
+  ];
+  var level = levels[Math.min(score, 4)];
+  fill.style.width = level.pct;
+  fill.style.background = level.color;
+  label.textContent = level.text;
+  label.style.color = level.color;
+}
+
+document.getElementById('passLenRange').addEventListener('input', function() {
+  document.getElementById('passLenDisplay').textContent = this.value;
+  if (generatedPassword) generatePassword();
 });
 
-document.getElementById('tabFile').addEventListener('click', function() {
-  document.getElementById('tabFile').classList.add('active');
-  document.getElementById('tabText').classList.remove('active');
-  document.getElementById('fileSection').style.display = 'block';
-  document.getElementById('textSection').style.display = 'none';
+['optUpper', 'optLower', 'optNumbers', 'optSymbols'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() {
+    if (generatedPassword) generatePassword();
+  });
+});
+
+document.getElementById('genPassBtn').addEventListener('click', generatePassword);
+
+document.getElementById('passGenCopy').addEventListener('click', function() {
+  if (!generatedPassword) return;
+  navigator.clipboard.writeText(generatedPassword).then(function() {
+    showToast('Password copied!');
+  });
+});
+
+document.getElementById('useAsSecretBtn').addEventListener('click', function() {
+  if (!generatedPassword) return;
+  setTab('tabText');
+  document.getElementById('secretText').value = generatedPassword;
+  showToast('Password ready — set expiry and share');
 });
 
 // FILE DROP ZONE
