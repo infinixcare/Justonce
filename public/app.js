@@ -69,27 +69,74 @@ document.getElementById('tabPassGen').addEventListener('click', function() { set
 // PASSWORD GENERATOR
 var generatedPassword = '';
 
+var WORD_POOL = [
+  'Cobra','Tiger','Falcon','Storm','Blaze','Frost','Raven','Atlas','Nova','Onyx',
+  'Ember','Viper','Cedar','Flint','Halo','Jade','Lynx','Maple','Orbit','Pixel',
+  'Quartz','Ridge','Solar','Titan','Ultra','Vapor','Walnut','Xenon','Yield','Zeal',
+  'Arrow','Bison','Crane','Delta','Eagle','Finch','Globe','Haven','Ivory','Joker',
+  'Karma','Lemon','Mango','Night','Ocean','Pearl','Queen','Robin','Swift','Topaz'
+];
+
+function randInt(max) {
+  var arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return arr[0] % max;
+}
+
+function pickWord() {
+  return WORD_POOL[randInt(WORD_POOL.length)];
+}
+
+function randNum(digits) {
+  var arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  var max = Math.pow(10, digits);
+  var min = Math.pow(10, digits - 1);
+  return String(min + (arr[0] % (max - min))).padStart(digits, '0');
+}
+
 function generatePassword() {
-  var len = parseInt(document.getElementById('passLenRange').value);
   var upper = document.getElementById('optUpper').checked;
   var lower = document.getElementById('optLower').checked;
   var numbers = document.getElementById('optNumbers').checked;
   var symbols = document.getElementById('optSymbols').checked;
+  var wordCount = parseInt(document.getElementById('passLenRange').value);
 
-  var charset = '';
-  if (upper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (lower) charset += 'abcdefghijklmnopqrstuvwxyz';
-  if (numbers) charset += '0123456789';
-  if (symbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-  if (!charset) {
-    showToast('Select at least one character type');
+  if (!upper && !lower) {
+    showToast('Enable uppercase or lowercase for word-based passwords');
     return;
   }
 
-  var arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  var password = Array.from(arr).map(function(v) { return charset[v % charset.length]; }).join('');
+  var SYMBOLS = ['!','@','#','$','%','&','*','+','=','?'];
+  var parts = [];
+
+  for (var i = 0; i < wordCount; i++) {
+    var word = pickWord();
+
+    // Apply case style
+    if (upper && lower) {
+      // Mixed: first letter upper, rest lower (default word style)
+      word = word[0].toUpperCase() + word.slice(1).toLowerCase();
+    } else if (upper) {
+      word = word.toUpperCase();
+    } else {
+      word = word.toLowerCase();
+    }
+
+    parts.push(word);
+
+    // Insert numbers between/after words
+    if (numbers) {
+      parts.push(randNum(2));
+    }
+
+    // Insert symbol after some words
+    if (symbols && (i < wordCount - 1 || numbers === false)) {
+      parts.push(SYMBOLS[randInt(SYMBOLS.length)]);
+    }
+  }
+
+  var password = parts.join('');
   generatedPassword = password;
 
   document.getElementById('passGenValue').textContent = password;
