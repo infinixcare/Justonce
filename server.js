@@ -35,6 +35,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public', 'about.html')));
+app.get('/how-it-works', (req, res) => res.sendFile(path.join(__dirname, 'public', 'how-it-works.html')));
+app.get('/faq', (req, res) => res.sendFile(path.join(__dirname, 'public', 'faq.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
+app.get('/guides', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guides.html')));
+app.get('/guides/secure-password-sharing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guides', 'secure-password-sharing.html')));
+app.get('/guides/strong-passwords', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guides', 'strong-passwords.html')));
+app.get('/guides/sharing-api-keys', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guides', 'sharing-api-keys.html')));
+
 const createLimiter = rateLimit({ windowMs: 15*60*1000, max: 20, message: { error: 'Too many requests.' } });
 const viewLimiter = rateLimit({ windowMs: 5*60*1000, max: 30, message: { error: 'Too many requests.' } });
 
