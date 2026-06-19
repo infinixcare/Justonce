@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Right Way to Share API Keys With Your Team — SingleReveal Guides</title>
+<meta name="description" content="API keys committed to chat history or code repos are a leading cause of credential leaks. A practical process for handing off keys safely." />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9043162537151100" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-9043162537151100">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e; --text: #e8e8f0; --muted: #6b6b8a; --accent: #7c6aff; --accent-soft: rgba(124,106,255,0.12); }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-weight: 300; min-height: 100vh; line-height: 1.8; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(10,10,15,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03em; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.78rem; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .container { max-width: 700px; margin: 0 auto; padding: 120px 24px 80px; }
+  .breadcrumb { font-size: 0.72rem; color: var(--muted); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--muted); }
+  .tag { display: inline-block; font-size: 0.65rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; background: var(--accent-soft); padding: 4px 10px; border-radius: 6px; margin-bottom: 16px; }
+  h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.1rem; letter-spacing: -0.03em; margin-bottom: 8px; line-height: 1.25; }
+  .meta { font-size: 0.72rem; color: var(--muted); margin-bottom: 40px; }
+  h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-top: 40px; margin-bottom: 14px; color: var(--accent); }
+  p { font-size: 0.88rem; color: var(--text); margin-bottom: 16px; opacity: 0.85; }
+  ul, ol { font-size: 0.88rem; color: var(--text); margin-bottom: 16px; padding-left: 22px; opacity: 0.85; }
+  ul li, ol li { margin-bottom: 10px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-size: 0.85em; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin: 32px 0; }
+  footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); }
+  footer span { color: var(--accent); }
+  footer a { color: var(--muted); text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: var(--accent); }
+  @media (max-width: 600px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo"><div class="logo-dot"></div>SingleReveal</a>
+  <div class="nav-links">
+    <a href="/about">About</a>
+    <a href="/how-it-works">How it works</a>
+    <a href="/faq">FAQ</a>
+    <a href="/guides">Guides</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="breadcrumb"><a href="/guides">Guides</a> / Sharing API keys</div>
+  <div class="tag">Developer security</div>
+  <h1>The Right Way to Share API Keys With Your Team</h1>
+  <div class="meta">7 min read</div>
+
+  <p>API keys, database credentials, and SSH keys get passed around development teams constantly — onboarding a new engineer, rotating a compromised key, or giving a contractor temporary access to a staging environment. The methods teams default to are often the same ones responsible for the most common and preventable credential leaks.</p>
+
+  <h2>The most common mistakes</h2>
+  <ul>
+    <li><strong>Pasting keys into Slack or Teams.</strong> Chat history is searchable and often retained indefinitely, meaning a key shared "temporarily" two years ago may still be discoverable by anyone who joins the channel later.</li>
+    <li><strong>Committing keys to a repository, even briefly.</strong> Git history retains every commit forever by default. A key pushed and then "removed" in a follow-up commit is still sitting in the repo's history unless the history itself is rewritten — and by then, automated scanners may have already found it.</li>
+    <li><strong>Emailing credentials directly.</strong> Same problem as with passwords: the key ends up duplicated across sent folders, inboxes, and backup systems indefinitely.</li>
+    <li><strong>Using shared documents.</strong> A "team credentials" spreadsheet or doc often outlives the employees who should have access, since removing access retroactively is easy to forget.</li>
+  </ul>
+
+  <h2>A better handoff process</h2>
+  <ol>
+    <li><strong>Generate the key with the narrowest scope possible.</strong> Most API providers let you restrict a key to specific permissions or IP ranges — do this before sharing, not after.</li>
+    <li><strong>Share it through a one-time link, not a permanent message.</strong> The recipient gets the key once; after that, the link is dead, so it can't resurface later from chat history or backups.</li>
+    <li><strong>Set a short expiry if the key won't be used immediately.</strong> If onboarding happens later in the week, there's no reason for the link to stay valid for days.</li>
+    <li><strong>Have the recipient store it in a secrets manager or environment variable immediately.</strong> The one-time link is for the handoff, not for the key's permanent home.</li>
+    <li><strong>Rotate the key if you ever suspect it was shared insecurely.</strong> If a key was ever pasted into a permanent channel before you started using one-time links, rotating it is the only way to be sure it's no longer valid anywhere it shouldn't be.</li>
+  </ol>
+
+  <h2>What about CI/CD secrets?</h2>
+  <p>For keys that need to live in a build pipeline long-term, use your CI provider's built-in secrets storage (encrypted environment variables) rather than hardcoding them into config files. One-time links are best suited to the human handoff moment — getting a credential from one person to another — not for long-term automated storage, which dedicated secrets managers handle better.</p>
+
+  <h2>A simple example</h2>
+  <p>Say you're rotating a third-party API key after a contractor's engagement ends. You'd generate the new key with the provider's minimum required scope, paste it into a one-time secret tool, set it to expire after a single view, and send the link to the engineer who needs it. They open it, drop it straight into their <code>.env</code> file, and the link is gone — no copy lingering in Slack, no commit history to scrub.</p>
+
+  <div class="card">
+    <p style="margin-bottom: 0;">Rotating a key or onboarding someone new? <a href="/">Share it as a one-time link</a> instead of pasting it into chat.</p>
+  </div>
+
+  <h2>Related reading</h2>
+  <ul>
+    <li><a href="/guides/secure-password-sharing">How to Share a Password Securely (Without Email or Text)</a></li>
+    <li><a href="/guides/strong-passwords">What Actually Makes a Password Strong in 2026</a></li>
+    <li><a href="/how-it-works">How SingleReveal's encryption and deletion process works</a></li>
+  </ul>
+</div>
+
+<footer>
+  <span>SingleReveal</span> · Secrets never stored in plain text ·
+  <a href="/">Home</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+</footer>
+
+</body>
+</html>

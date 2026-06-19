@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How SingleReveal Works — One-Time Encrypted Links Explained</title>
+<meta name="description" content="A step-by-step look at how SingleReveal encrypts, stores, and permanently destroys secrets after a single view." />
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9043162537151100" crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-9043162537151100">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #0a0a0f; --surface: #12121a; --border: #1e1e2e; --text: #e8e8f0; --muted: #6b6b8a; --accent: #7c6aff; --accent-soft: rgba(124,106,255,0.12); }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; font-weight: 300; min-height: 100vh; line-height: 1.8; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; background: rgba(10,10,15,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03em; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.78rem; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .container { max-width: 720px; margin: 0 auto; padding: 120px 24px 80px; }
+  h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem; letter-spacing: -0.03em; margin-bottom: 8px; }
+  .lede { font-size: 0.95rem; color: var(--muted); margin-bottom: 48px; line-height: 1.7; }
+  h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; margin-top: 44px; margin-bottom: 14px; color: var(--accent); }
+  p { font-size: 0.88rem; color: var(--text); margin-bottom: 16px; opacity: 0.85; }
+  ul, ol { font-size: 0.88rem; color: var(--text); margin-bottom: 16px; padding-left: 22px; opacity: 0.85; }
+  ul li, ol li { margin-bottom: 12px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .step { display: flex; gap: 18px; margin-bottom: 28px; align-items: flex-start; }
+  .step-num { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-soft); border: 1px solid rgba(124,106,255,0.3); color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+  .step-body h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 6px; color: var(--text); }
+  .step-body p { margin-bottom: 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin: 32px 0; }
+  footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--muted); }
+  footer span { color: var(--accent); }
+  footer a { color: var(--muted); text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: var(--accent); }
+  @media (max-width: 600px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo"><div class="logo-dot"></div>SingleReveal</a>
+  <div class="nav-links">
+    <a href="/about">About</a>
+    <a href="/how-it-works">How it works</a>
+    <a href="/faq">FAQ</a>
+    <a href="/guides">Guides</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>How it works</h1>
+  <p class="lede">From the moment you paste a secret to the moment it's destroyed, here's exactly what happens behind the scenes.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>You enter a secret</h3>
+      <p>Type or paste any text — a password, an API key, a private note — or upload a file up to 10MB. You choose whether the link expires after one view, after a set time, or both.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>It's encrypted immediately</h3>
+      <p>Before anything is written to storage, the content is encrypted using AES-256-GCM, an authenticated encryption standard widely used for protecting sensitive data in transit and at rest. The plain-text version never reaches our database.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>You get a unique, unguessable link</h3>
+      <p>Each secret is assigned a randomly generated identifier that's effectively impossible to guess. This link is the only way to access the secret — there's no separate login, search, or browse feature that could expose it.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>The recipient opens it once</h3>
+      <p>When the link is opened, the server decrypts the content just long enough to display it, then immediately deletes the encrypted record from the database. If the recipient refreshes the page or tries the link again, there's nothing left to retrieve.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3>It's gone — permanently</h3>
+      <p>There's no recycle bin, no audit trail showing what the secret was, and no backup snapshot retaining a copy. Deletion is immediate and irreversible, whether the secret was viewed or simply expired.</p>
+    </div>
+  </div>
+
+  <h2>Expiry options explained</h2>
+  <ul>
+    <li><strong>View-once:</strong> The link self-destructs the instant it's opened, regardless of how much time has passed.</li>
+    <li><strong>Time-based:</strong> The link stays valid for a set duration (minutes to days) but can be viewed multiple times within that window.</li>
+    <li><strong>Both:</strong> Whichever limit is hit first — a single view or the time limit — triggers deletion.</li>
+  </ul>
+
+  <h2>Optional password protection</h2>
+  <p>You can add a password to a secret on top of its expiry settings. The recipient needs both the link and the password to unlock the content, which is useful when you're sending the link and the password through two different channels — for example, the link by email and the password by text message.</p>
+
+  <h2>What we can and can't see</h2>
+  <p>Once a secret is encrypted, we don't have a convenient way to read it back outside of the normal reveal flow — and after that flow runs once, the encrypted data is deleted entirely. Server logs capture basic request metadata for abuse prevention (see our <a href="/privacy">Privacy Policy</a>), but never the secret's contents.</p>
+
+  <div class="card">
+    <p style="margin-bottom: 0;">Ready to try it? <a href="/">Create your first secret link →</a></p>
+  </div>
+</div>
+
+<footer>
+  <span>SingleReveal</span> · Secrets never stored in plain text ·
+  <a href="/">Home</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+</footer>
+
+</body>
+</html>
